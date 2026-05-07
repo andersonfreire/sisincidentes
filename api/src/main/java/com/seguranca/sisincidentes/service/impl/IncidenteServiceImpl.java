@@ -3,18 +3,24 @@ package com.seguranca.sisincidentes.service.impl;
 import com.seguranca.sisincidentes.api.dto.IncidenteRequestDTO;
 import com.seguranca.sisincidentes.api.dto.IncidenteResponseDTO;
 import com.seguranca.sisincidentes.api.dto.VulnerabilidadeResponseDTO;
+import com.seguranca.sisincidentes.api.exception.ForbiddenOperationException;
 import com.seguranca.sisincidentes.api.exception.ResourceNotFoundException;
 import com.seguranca.sisincidentes.domain.model.Incidente;
+import com.seguranca.sisincidentes.domain.model.Perfil;
 import com.seguranca.sisincidentes.domain.model.Vulnerabilidade;
 import com.seguranca.sisincidentes.domain.repository.IncidenteRepository;
 import com.seguranca.sisincidentes.domain.repository.VulnerabilidadeRepository;
+import com.seguranca.sisincidentes.security.UserDetailsImpl;
 import com.seguranca.sisincidentes.service.IncidenteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -41,7 +47,8 @@ public class IncidenteServiceImpl implements IncidenteService {
 
     @Override
     @Transactional
-    public IncidenteResponseDTO create(IncidenteRequestDTO requestDTO) {
+    public IncidenteResponseDTO create(@NonNull IncidenteRequestDTO requestDTO) {
+        Objects.requireNonNull(requestDTO, "Os dados do incidente não podem ser nulos.");
         log.info("Registrando novo incidente: {}", requestDTO.getTitulo());
 
         // Resolve a lista de vulnerabilidades a partir dos IDs informados
@@ -51,7 +58,7 @@ public class IncidenteServiceImpl implements IncidenteService {
         // Garante o status inicial conforme regra de negócio
         entity.setStatus("ABERTO");
 
-        Incidente saved = incidenteRepository.save(entity);
+        Incidente saved = saveAndValidate(entity);
 
         log.info("Incidente registrado com sucesso. ID: {}", saved.getId());
         return toResponseDTO(saved);
@@ -59,7 +66,9 @@ public class IncidenteServiceImpl implements IncidenteService {
 
     @Override
     @Transactional
-    public IncidenteResponseDTO update(Long id, IncidenteRequestDTO requestDTO) {
+    public IncidenteResponseDTO update(@NonNull Long id, @NonNull IncidenteRequestDTO requestDTO) {
+        Objects.requireNonNull(id, "O ID do incidente não pode ser nulo.");
+        Objects.requireNonNull(requestDTO, "Os dados para atualização não podem ser nulos.");
         log.info("Atualizando incidente ID: {}", id);
 
         Incidente existing = findIncidenteOrThrow(id);
@@ -70,7 +79,7 @@ public class IncidenteServiceImpl implements IncidenteService {
         existing.setStatus(requestDTO.getStatus() != null ? requestDTO.getStatus() : existing.getStatus());
         existing.setVulnerabilidades(vulnerabilidades);
 
-        Incidente updated = incidenteRepository.save(existing);
+        Incidente updated = saveAndValidate(existing);
         log.info("Incidente ID {} atualizado com sucesso.", id);
         return toResponseDTO(updated);
     }
@@ -87,14 +96,21 @@ public class IncidenteServiceImpl implements IncidenteService {
 
     @Override
     @Transactional(readOnly = true)
-    public IncidenteResponseDTO findById(Long id) {
+    public IncidenteResponseDTO findById(@NonNull Long id) {
+        Objects.requireNonNull(id, "O ID do incidente não pode ser nulo.");
         log.debug("Buscando incidente por ID: {}", id);
         return toResponseDTO(findIncidenteOrThrow(id));
     }
 
     @Override
     @Transactional
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
+        // RF04 — Bloqueio de exclusão para OPERADOR
+        if (!isAuthorizedToChangeSensitiveData()) {
+            throw new ForbiddenOperationException("O perfil OPERADOR não tem permissão para excluir incidentes.");
+        }
+
+        Objects.requireNonNull(id, "O ID do incidente não pode ser nulo.");
         log.info("Excluindo incidente ID: {}", id);
         if (!incidenteRepository.existsById(id)) {
             throw new ResourceNotFoundException(RESOURCE_NAME, "id", id);
@@ -107,7 +123,8 @@ public class IncidenteServiceImpl implements IncidenteService {
     //  Helpers privados
     // =========================================================
 
-    private Incidente findIncidenteOrThrow(Long id) {
+    private Incidente findIncidenteOrThrow(@NonNull Long id) {
+        Objects.requireNonNull(id, "O ID para busca não pode ser nulo.");
         return incidenteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_NAME, "id", id));
     }
@@ -121,6 +138,26 @@ public class IncidenteServiceImpl implements IncidenteService {
             throw new ResourceNotFoundException("Vulnerabilidade", "ids", ids);
         }
         return found;
+    }
+
+    private boolean isAuthorizedToChangeSensitiveData() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetailsImpl) {
+            Perfil perfil = ((UserDetailsImpl) principal).getUsuario().getPerfil();
+            return perfil == Perfil.ADMIN || perfil == Perfil.GESTOR_TI;
+        }
+        return false;
+    }
+
+    /**
+     * Salva uma entidade e valida que o retorno não seja nulo.
+     * Encapsula a validação de nulidade para satisfazer a análise estática da IDE.
+     * O framework já gerencia a nulidade e garantimos a segurança com requireNonNull.
+     */
+    @NonNull
+    @SuppressWarnings("null")
+    private Incidente saveAndValidate(Incidente entity) {
+        return Objects.requireNonNull(incidenteRepository.save(entity));
     }
 
     // =========================================================

@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Controller REST para o gerenciamento de Incidentes de Segurança.
@@ -52,6 +53,7 @@ public class IncidenteController {
     public ResponseEntity<IncidenteResponseDTO> create(
             @Valid @RequestBody IncidenteRequestDTO requestDTO) {
 
+        Objects.requireNonNull(requestDTO, "O corpo da requisição não pode ser nulo.");
         log.info("POST /api/incidentes — Registrando incidente: {}", requestDTO.getTitulo());
         IncidenteResponseDTO response = service.create(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -86,6 +88,7 @@ public class IncidenteController {
             @Parameter(description = "ID do Incidente", required = true, example = "1")
             @PathVariable Long id) {
 
+        Objects.requireNonNull(id, "O ID do incidente não pode ser nulo.");
         log.debug("GET /api/incidentes/{} — Buscando por ID.", id);
         return ResponseEntity.ok(service.findById(id));
     }
@@ -100,6 +103,8 @@ public class IncidenteController {
             @PathVariable Long id,
             @Valid @RequestBody IncidenteRequestDTO requestDTO) {
 
+        Objects.requireNonNull(id, "O ID do incidente não pode ser nulo.");
+        Objects.requireNonNull(requestDTO, "O corpo da requisição não pode ser nulo.");
         log.info("PUT /api/incidentes/{} — Atualizando registro.", id);
         return ResponseEntity.ok(service.update(id, requestDTO));
     }
@@ -111,6 +116,7 @@ public class IncidenteController {
     @Operation(summary = "Excluir Incidente")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
+        Objects.requireNonNull(id, "O ID do incidente não pode ser nulo.");
         log.info("DELETE /api/incidentes/{} — Removendo registro.", id);
         service.delete(id);
         return ResponseEntity.noContent().build();

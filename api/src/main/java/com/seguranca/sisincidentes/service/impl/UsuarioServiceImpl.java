@@ -2,15 +2,18 @@ package com.seguranca.sisincidentes.service.impl;
 
 import com.seguranca.sisincidentes.api.dto.UsuarioRequestDTO;
 import com.seguranca.sisincidentes.api.dto.UsuarioResponseDTO;
+import com.seguranca.sisincidentes.api.exception.ForbiddenOperationException;
 import com.seguranca.sisincidentes.api.exception.ResourceNotFoundException;
 import com.seguranca.sisincidentes.domain.model.UnidadeAdministrativa;
 import com.seguranca.sisincidentes.domain.model.Usuario;
 import com.seguranca.sisincidentes.domain.model.Perfil;
 import com.seguranca.sisincidentes.domain.repository.UnidadeAdministrativaRepository;
 import com.seguranca.sisincidentes.domain.repository.UsuarioRepository;
+import com.seguranca.sisincidentes.security.UserDetailsImpl;
 import com.seguranca.sisincidentes.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -96,6 +99,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         // Valida existência da nova Unidade Administrativa
         UnidadeAdministrativa unidade = findUnidadeOrThrow(requestDTO.getUnidadeId());
 
+        // RF04 — Restrição de Dados Sensíveis
+        if (!isAuthorizedToChangeSensitiveData()) {
+            validateSensitiveFields(existing, requestDTO);
+        }
+
         // Atualiza os campos editáveis
         existing.setEmail(requestDTO.getEmail());
         existing.setNome(requestDTO.getNome());
@@ -166,6 +174,11 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     @Transactional
     public void delete(@NonNull Long id) {
+        // RF04 — Bloqueio de exclusão para OPERADOR
+        if (!isAuthorizedToChangeSensitiveData()) {
+            throw new ForbiddenOperationException("O perfil OPERADOR não tem permissão para excluir usuários.");
+        }
+
         log.info("Excluindo usuário ID: {}", id);
 
         if (!usuarioRepository.existsById(id)) {
@@ -197,18 +210,37 @@ public class UsuarioServiceImpl implements UsuarioService {
     //  Helpers privados
     // =========================================================
 
-    private Usuario findUsuarioOrThrow(Long id) {
-        Objects.requireNonNull(id, "O ID do usuário não pode ser nulo.");
+    private Usuario findUsuarioOrThrow(@NonNull Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_NAME, "id", id));
     }
 
-    private UnidadeAdministrativa findUnidadeOrThrow(Long unidadeId) {
-        Objects.requireNonNull(unidadeId, "O ID da unidade administrativa não pode ser nulo.");
-        return unidadeRepository.findById(unidadeId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                    "Unidade Administrativa", "id", unidadeId
-                ));
+    private UnidadeAdministrativa findUnidadeOrThrow(Long id) {
+        // Validação defensiva para garantir conformidade com @NonNull do repositório
+        Long idValido = Objects.requireNonNull(id, "O ID da unidade administrativa não pode ser nulo");
+        return unidadeRepository.findById(idValido)
+                .orElseThrow(() -> new ResourceNotFoundException("Unidade Administrativa", "id", idValido));
+    }
+
+    private boolean isAuthorizedToChangeSensitiveData() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetailsImpl) {
+            Perfil perfil = ((UserDetailsImpl) principal).getUsuario().getPerfil();
+            return perfil == Perfil.ADMIN || perfil == Perfil.GESTOR_TI;
+        }
+        return false;
+    }
+
+    private void validateSensitiveFields(Usuario existing, UsuarioRequestDTO dto) {
+        if (!existing.getEmail().equalsIgnoreCase(dto.getEmail())) {
+            throw new ForbiddenOperationException("O perfil OPERADOR não tem permissão para alterar o e-mail do usuário.");
+        }
+        if (existing.getMatricula() != null && !existing.getMatricula().equals(dto.getMatricula())) {
+            throw new ForbiddenOperationException("O perfil OPERADOR não tem permissão para alterar a matrícula do usuário.");
+        }
+        if (existing.getPerfil() != dto.getPerfil() && dto.getPerfil() != null) {
+            throw new ForbiddenOperationException("O perfil OPERADOR não tem permissão para alterar o nível de acesso (perfil) do usuário.");
+        }
     }
 
     // =========================================================

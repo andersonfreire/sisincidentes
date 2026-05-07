@@ -10,10 +10,12 @@ import com.seguranca.sisincidentes.domain.repository.LicaoAprendidaRepository;
 import com.seguranca.sisincidentes.service.LicaoAprendidaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -39,20 +41,25 @@ public class LicaoAprendidaServiceImpl implements LicaoAprendidaService {
     @Override
     @Transactional
     public LicaoAprendidaResponseDTO create(LicaoAprendidaRequestDTO requestDTO) {
-        log.info("Iniciando registro de lição aprendida para o incidente ID: {}", requestDTO.getIncidenteId());
+        Objects.requireNonNull(requestDTO, "O DTO de requisição não pode ser nulo");
+        Long incidenteId = Objects.requireNonNull(requestDTO.getIncidenteId(), "O ID do incidente não pode ser nulo");
 
-        Incidente incidente = incidenteRepository.findById(requestDTO.getIncidenteId())
-                .orElseThrow(() -> new ResourceNotFoundException("Incidente", "id", requestDTO.getIncidenteId()));
+        log.info("Iniciando registro de lição aprendida para o incidente ID: {}", incidenteId);
+
+        Incidente incidente = incidenteRepository.findById(incidenteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Incidente", "id", incidenteId));
 
         // Valida restrição de integridade 1:1
-        licaoRepository.findByIncidenteId(requestDTO.getIncidenteId()).ifPresent(l -> {
+        licaoRepository.findByIncidenteId(incidenteId).ifPresent(l -> {
             throw new IllegalArgumentException(
-                String.format("O incidente ID %d já possui uma lição aprendida registrada.", requestDTO.getIncidenteId())
+                String.format("O incidente ID %d já possui uma lição aprendida registrada.", incidenteId)
             );
         });
 
         LicaoAprendida entity = toEntity(requestDTO, incidente);
-        LicaoAprendida saved = licaoRepository.save(entity);
+
+        // Chamada via método auxiliar para conformidade com @Nullable e segurança de tipos
+        LicaoAprendida saved = Objects.requireNonNull(saveInternal(entity), "Erro ao persistir a lição aprendida");
 
         log.info("Lição aprendida registrada com sucesso. ID: {}", saved.getId());
         return toResponseDTO(saved);
@@ -80,11 +87,14 @@ public class LicaoAprendidaServiceImpl implements LicaoAprendidaService {
     @Override
     @Transactional
     public void delete(Long id) {
-        log.info("Excluindo lição aprendida ID: {}", id);
-        if (!licaoRepository.existsById(id)) {
-            throw new ResourceNotFoundException(RESOURCE_NAME, "id", id);
+        // Linhas 88 e 91: Validação defensiva imediata para informar ao compilador
+        Long idValido = Objects.requireNonNull(id, "O ID da lição aprendida não pode ser nulo");
+
+        log.info("Excluindo lição aprendida ID: {}", idValido);
+        if (!licaoRepository.existsById(idValido)) {
+            throw new ResourceNotFoundException(RESOURCE_NAME, "id", idValido);
         }
-        licaoRepository.deleteById(id);
+        licaoRepository.deleteById(idValido);
     }
 
     // =========================================================
@@ -106,5 +116,14 @@ public class LicaoAprendidaServiceImpl implements LicaoAprendidaService {
                 .descricaoResolucao(entity.getDescricaoResolucao())
                 .dataCriacao(entity.getDataCriacao())
                 .build();
+    }
+
+    /**
+     * Método auxiliar para conformidade de nulidade.
+     * Encapsula o retorno do repositório permitindo o uso de @Nullable no contrato do método.
+     */
+    @Nullable
+    private LicaoAprendida saveInternal(LicaoAprendida entity) {
+        return licaoRepository.save(entity);
     }
 }

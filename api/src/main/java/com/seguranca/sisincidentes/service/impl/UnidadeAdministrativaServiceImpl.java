@@ -2,13 +2,17 @@ package com.seguranca.sisincidentes.service.impl;
 
 import com.seguranca.sisincidentes.api.dto.UnidadeAdministrativaRequestDTO;
 import com.seguranca.sisincidentes.api.dto.UnidadeAdministrativaResponseDTO;
+import com.seguranca.sisincidentes.api.exception.ForbiddenOperationException;
 import com.seguranca.sisincidentes.api.exception.ResourceNotFoundException;
+import com.seguranca.sisincidentes.domain.model.Perfil;
 import com.seguranca.sisincidentes.domain.model.UnidadeAdministrativa;
 import com.seguranca.sisincidentes.domain.repository.UnidadeAdministrativaRepository;
+import com.seguranca.sisincidentes.security.UserDetailsImpl;
 import com.seguranca.sisincidentes.service.UnidadeAdministrativaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,6 +79,11 @@ public class UnidadeAdministrativaServiceImpl implements UnidadeAdministrativaSe
             );
         }
 
+        // RF04 — Restrição de Dados Sensíveis para OPERADOR
+        if (isOperador()) {
+            validateSensitiveFields(existing, requestDTO);
+        }
+
         // Atualiza apenas os campos editáveis
         existing.setCodigo(requestDTO.getCodigo());
         existing.setSigla(requestDTO.getSigla());
@@ -139,6 +148,11 @@ public class UnidadeAdministrativaServiceImpl implements UnidadeAdministrativaSe
     @Override
     @Transactional
     public void delete(@NonNull Long id) {
+        // RF04 — Bloqueio de exclusão para OPERADOR
+        if (isOperador()) {
+            throw new ForbiddenOperationException("O perfil OPERADOR não tem permissão para excluir unidades administrativas.");
+        }
+
         Objects.requireNonNull(id, "O ID da unidade administrativa não pode ser nulo para exclusão.");
         log.info("Excluindo unidade administrativa ID: {}", id);
 
@@ -181,6 +195,24 @@ public class UnidadeAdministrativaServiceImpl implements UnidadeAdministrativaSe
                 .dataCriacao(entity.getDataCriacao())
                 .dataAtualizacao(entity.getDataAtualizacao())
                 .build();
+    }
+
+
+    private boolean isOperador() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetailsImpl) {
+            return ((UserDetailsImpl) principal).getUsuario().getPerfil() == Perfil.OPERADOR;
+        }
+        return false;
+    }
+
+    private void validateSensitiveFields(UnidadeAdministrativa existing, UnidadeAdministrativaRequestDTO dto) {
+        if (!existing.getCodigo().equals(dto.getCodigo())) {
+            throw new ForbiddenOperationException("O perfil OPERADOR não tem permissão para alterar o código da unidade.");
+        }
+        if (!existing.getSigla().equals(dto.getSigla())) {
+            throw new ForbiddenOperationException("O perfil OPERADOR não tem permissão para alterar a sigla da unidade.");
+        }
     }
 
     /**

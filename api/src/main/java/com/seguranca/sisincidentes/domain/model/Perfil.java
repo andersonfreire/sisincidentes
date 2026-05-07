@@ -17,6 +17,9 @@ public enum Perfil {
     /** Administrador do sistema — acesso total. */
     ADMIN,
 
+    /** Gestor de TI — acesso administrativo e de coordenação. */
+    GESTOR_TI,
+
     /** Operador — acesso funcional padrão. */
     OPERADOR
 }

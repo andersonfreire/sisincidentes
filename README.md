@@ -1,74 +1,111 @@
-# 🧭 SisIncidentes
+# 🧭 SisIncidentes — Sistema de Gerenciamento de Incidentes
 
-O **SisIncidentes** é um sistema web desenvolvido para registrar, visualizar e gerenciar incidentes de forma simples e organizada.  
-A aplicação permite o cadastro e o controle de **categorias** e **incidentes**, com suporte completo às operações **CRUD** (Criar, Ler, Atualizar e Deletar).
-
----
-
-## 🚀 Tecnologias Utilizadas
-
-- **React.js** — Biblioteca principal para construção da interface.  
-- **React Router DOM** — Gerenciamento de rotas e navegação entre páginas.  
-- **Bootstrap 5** — Estilização responsiva e moderna.  
-- **Firebase Firestore** — Banco de dados NoSQL para armazenamento em nuvem.
-  
----
-
-## ⚙️ Funcionalidades
-
-- 📋 Cadastro, listagem, edição e exclusão de **incidentes**  
-- 🗂️ CRUD completo de **categorias**  
-- 🔍 Filtro de incidentes por categoria ou nome  
-- 🔐 Autenticação (opcional, se habilitada no Firebase Auth)  
-- 💾 Persistência de dados via **Firebase Firestore**  
-
+O **SisIncidentes** é uma solução robusta para o registro, controle e análise de incidentes de segurança. O projeto foi recentemente migrado de uma arquitetura baseada em Firebase para uma arquitetura moderna e escalável utilizando **Java 21** e **Spring Boot 3**.
 
 ---
 
-## 🧩 Configuração e Execução do Projeto
+## 🚀 Novas Especificações Técnicas
 
-### 🔹 Pré-requisitos
+O sistema agora opera em uma estrutura de **Monorepo**, dividida em duas camadas principais:
 
-Antes de executar o projeto, você precisa ter instalado:
+### ⚙️ Backend (API)
+- **Linguagem:** Java 21
+- **Framework:** Spring Boot 3.4.5
+- **Persistência:** Spring Data JPA com Hibernate
+- **Banco de Dados:** H2 Database (em memória para desenvolvimento)
+- **Segurança:** Spring Security (Configurado com bypass para ambiente de desenvolvimento)
+- **Documentação:** OpenAPI 3 / Swagger UI
+- **Gerenciador de Dependências:** Maven
 
-- [Node.js (>= 18.x)](https://nodejs.org/)
-- [npm](https://www.npmjs.com/)
-- Uma conta no [Firebase Console](https://console.firebase.google.com/)
+### 💻 Frontend (Web)
+- **Framework:** React 19+
+- **Estilização:** Bootstrap 5.3 & React-Bootstrap
+- **Roteamento:** React Router DOM 7
+- **Gráficos:** Recharts
+- **Ícones:** React Icons
 
 ---
 
-### 🔹 Passos para executar localmente
+## 📂 Estrutura do Projeto
 
-1. **Clone este repositório**
+- `/api`: Código-fonte do backend Spring Boot.
+- `/web`: Código-fonte do frontend React.
 
-```bash
-git clone https://github.com/andersonfreire/sisincidentes.git
-cd sisincidentes
-```
+---
 
-2. **Instale as dependências**
+## ⚙️ Como Executar o Projeto
 
-```
-npm install
-```
-3. **Crie as variáveis de ambiente para o Firebase**
+### 1️⃣ Preparação do Backend
+1. Navegue até a pasta `api`:
+   ```bash
+   cd api
+   ```
+2. Execute o projeto usando Maven:
+   ```bash
+   mvn spring-boot:run
+   ```
+   *O servidor iniciará em `http://localhost:8080`.*
 
-> Na raiz do seu projeto, no mesmo nível do package.json, crie um arquivo .env com o seguinte conteúdo. As informações para atribuição a estas variáveis você pode consultar nas configurações do SDK do seu app, que está presente no projeto criado no Firebase.
+### 2️⃣ Preparação do Frontend
+1. Navegue até a pasta `web`:
+   ```bash
+   cd web
+   ```
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+3. Verifique o arquivo `.env` para garantir a URL da API:
+   ```env
+   REACT_APP_API_URL=http://localhost:8080/api
+   ```
+4. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm start
+   ```
+   *A aplicação abrirá em `http://localhost:3000`.*
 
-```
-REACT_APP_API_KEY=
-REACT_APP_AUTH_DOMAIN=
-REACT_APP_PROJECT_ID=
-REACT_APP_STORAGE_BUCKET=
-REACT_APP_MESSAGING_SENDER_ID=
-REACT_APP_APP_ID=
-```
+---
 
-4. **Inicie o servidor local**
+## 🧪 Passo a Passo para Testar o Projeto
 
-```
-npm start
-```
+### A. Testando o Backend (API)
 
+1.  **Swagger UI (Exploração de Endpoints):**
+    - Acesse `http://localhost:8080/swagger-ui.html` para visualizar e testar todos os endpoints disponíveis.
+    - No módulo **Unidades Administrativas (RF01)**, você pode realizar testes de `GET`, `POST`, `PUT` e `DELETE` diretamente pelo navegador.
 
+2.  **Console do Banco de Dados H2:**
+    - Acesse `http://localhost:8080/h2-console`.
+    - **JDBC URL:** `jdbc:h2:mem:sisincidentesdb`
+    - **Usuário:** `sa`
+    - **Senha:** (deixe em branco)
+    - Clique em "Connect" para visualizar as tabelas e os dados persistidos em tempo de execução.
 
+3.  **Testes Automatizados:**
+    - Na pasta `api`, execute:
+      ```bash
+      mvn test
+      ```
+    - Isso validará as regras de negócio e a integração dos controllers.
+
+### B. Testando o Frontend (Integração)
+
+1.  **Fluxo de Unidade Administrativa (RF01):**
+    - No sistema, navegue até a seção de "Unidades".
+    - **Cadastro:** Tente cadastrar uma nova unidade (Ex: SIGLA: STI, Título: Superintendência de TI).
+    - **Listagem:** Verifique se a unidade aparece na lista após o cadastro.
+    - **Busca:** Utilize o campo de pesquisa para filtrar por sigla ou título.
+    - **Edição:** Altere o título de uma unidade e verifique se a alteração persiste.
+    - **Exclusão:** Remova uma unidade e confirme se ela sumiu da listagem e do console H2.
+
+2.  **Validações:**
+    - Tente cadastrar uma unidade com o mesmo **código** de uma já existente; o sistema deve retornar um erro amigável de conflito (409).
+    - Tente salvar campos vazios para verificar a validação de formulários.
+
+---
+
+## 🛠️ Requisitos de Ambiente
+- Java 21 JDK
+- Node.js 18+
+- Maven 3.8+

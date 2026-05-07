@@ -1,0 +1,57 @@
+/* Styles para a página de Login - responsividade e layout */
+.login-page {
+  min-height: 100vh;
+  background-color: #f8f9fa; /* mesma cor do bg-light do bootstrap */
+  display: flex;
+  flex-direction: column;
+}
+
+.login-container {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.login-card {
+  border-radius: 0.5rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 0;
+  padding: 1.5rem;
+}
+
+.login-title h3 {
+  margin-bottom: 0.25rem;
+}
+
+.login-card .alert {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+.login-footer {
+  background: #fff;
+  text-align: center;
+  color: #6c757d;
+  padding: 0.75rem 0;
+  border-top: 1px solid #e9ecef;
+}
+
+@media (max-width: 576px) {
+  .login-card {
+    padding: 1rem;
+    margin: 0.25rem;
+  }
+
+  .login-title h3 {
+    font-size: 1.25rem;
+  }
+
+  .login-card .btn {
+    padding: 0.5rem 0.75rem;
+  }
+}

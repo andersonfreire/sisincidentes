@@ -1,0 +1,27 @@
+.usuario-page {
+  padding: 0.5rem;
+}
+
+.usuario-card {
+  border-radius: 6px;
+}
+
+.usuario-card-body {
+  padding: 0.75rem 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .usuario-card-body {
+    /* padding: 1.5rem; */
+  }
+}
+
+@media (max-width: 576px) {
+  .usuario-page {
+    padding: 0.5rem;
+  }
+
+  .usuario-card {
+    margin: 0.25rem;
+  }
+}

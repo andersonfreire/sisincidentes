@@ -1,0 +1,41 @@
+/* Layout principal */
+.app-layout {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+
+/* Conteúdo principal */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Cabeçalho superior (Header) */
+
+
+/* Área de conteúdo */
+.content {
+  flex: 1;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  margin: 20px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.05);
+}
+
+
+/* 
+@media (max-width: 992px) {
+  .navbar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: none;
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+} */

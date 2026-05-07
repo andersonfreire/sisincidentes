@@ -1,0 +1,23 @@
+export const initialIncidenteVulnerabilidade = {
+  numeroChamado: "",
+  tarefaRelacionada: "",
+  tipo: "",
+  assunto: "",
+  categoriaId: "",
+  unidadeId: "",
+  autorId: "",
+  atribuidoId: "",
+  ipOrigem: "",
+  ipDestino: "",
+  host: "",
+  createdAt: "",
+  updatedAt: "",
+  dataConclusao: "",
+  tempoEstimado: "",
+  cc: "",
+  descricao: "",
+  notas: "",
+  situacao: "Aberta",
+  prioridade: "Média",
+  natureza: ""
+};

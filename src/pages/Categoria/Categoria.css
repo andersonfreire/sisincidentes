@@ -1,0 +1,58 @@
+
+.categoria-card {
+  border-radius: 6px;
+}
+
+.categoria-card-body {
+  padding: 0;
+}
+
+.categoria-form {
+  margin-bottom: 1rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.categoria-form h4 {
+  margin-bottom: 1rem;
+}
+
+.categoria-form-inner {
+  width: 100%;
+  max-width: 600px;
+}
+
+.categoria-form .btn {
+  min-width: 120px;
+}
+
+.categoria-list {
+  margin-top: 0.5rem;
+}
+
+.categoria-table th.col-nome { min-width: 90px; }
+.categoria-table th.col-descricao { min-width: 140px; }
+.categoria-table th.col-tipo { min-width: 90px; }
+.categoria-table th.col-acoes { min-width: 130px; }
+
+/* Força quebra e espaçamento em botões de ação na lista em telas pequenas */
+.categoria-actions-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 576px) {
+  .categoria-page { padding: 0.5rem; }
+
+  .categoria-form-inner { max-width: 100%; }
+
+  .categoria-table th.col-descricao { min-width: 120px; }
+
+  .categoria-table td, .categoria-table th {
+    font-size: 0.95rem;
+  }
+
+  /* Ajuste visual para tabela responsiva: deixa ações em nova linha se necessário */
+  .categoria-actions-buttons .btn { flex: 1 1 auto; }
+}

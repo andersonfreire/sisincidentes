@@ -1,0 +1,59 @@
+.licao-page {
+  padding: 1rem;
+}
+
+.licao-card {
+  border-radius: 6px;
+}
+
+.licao-card-body {
+  padding: 0;
+}
+
+.licao-form {
+  margin-bottom: 1rem;
+}
+
+.licao-form-inner {
+  width: 100%;
+  max-width: 700px;
+}
+
+.form-actions {
+  margin-top: 0.75rem;
+}
+
+.form-actions .btn {
+  min-width: 120px;
+}
+
+.licao-list {
+  margin-top: 0.5rem;
+}
+
+.licao-table th.col-titulo { min-width: 120px; }
+.licao-table th.col-autor { min-width: 90px; }
+.licao-table th.col-incidente { min-width: 90px; }
+.licao-table th.col-data { min-width: 110px; }
+.licao-table th.col-anexo { min-width: 90px; }
+.licao-table th.col-acoes { min-width: 130px; }
+
+.licao-actions-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .licao-form-inner { max-width: 100%; padding-left: 0.5rem; padding-right: 0.5rem; }
+  .licao-card-body { padding: 0.75rem; }
+  .licao-table th.col-titulo { min-width: 120px; }
+}
+
+@media (max-width: 576px) {
+  .form-actions { display: flex !important; justify-content: center; }
+  .form-actions .btn { width: 100%; }
+  .licao-actions-buttons .btn { flex: 1 1 auto; }
+  .licao-table td, .licao-table th { font-size: 0.95rem; }
+}

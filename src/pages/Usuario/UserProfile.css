@@ -1,0 +1,40 @@
+.user-profile-container {
+  max-width: 700px;
+  margin: 40px auto;
+}
+
+.profile-pic {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border: 3px solid #dee2e6;
+}
+
+@media (max-width: 768px) {
+  .user-profile-container {
+    margin: 20px;
+  }
+  .profile-pic {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+/* Ajustes para ações do formulário em mobile */
+.form-actions {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 576px) {
+  .form-actions {
+    display: flex !important; /* garante que a classe funcione mesmo com Bootstrap utilities */
+    width: 100%;
+    justify-content: center;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}

@@ -35,10 +35,10 @@ public class OpenApiConfig {
                 "## Sistema de Gerenciamento de Incidentes de Segurança\n\n" +
                 "API REST construída com **Spring Boot 3.4** + **Java 21** + **H2 Database**.\n\n" +
                 "### Recursos implementados:\n" +
-                "- **RF01** — Gerenciamento de Unidades Administrativas ✅\n\n" +
+                "- **RF01** — Gerenciamento de Unidades Administrativas ✅\n" +
+                "- **RF02** — Gerenciamento de Usuários ✅\n\n" +
                 "### Recursos em desenvolvimento:\n" +
-                "- RF02 — Autenticação e Autorização (JWT)\n" +
-                "- RF03 — Gerenciamento de Usuários\n" +
+                "- RF03 — Autenticação e Autorização (JWT)\n" +
                 "- RF04 — Gerenciamento de Categorias\n" +
                 "- RF05 — Gerenciamento de Incidentes\n" +
                 "- RF06 — Relatórios e Estatísticas"

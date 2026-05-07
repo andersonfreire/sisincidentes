@@ -61,4 +61,13 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+    /**
+     * Bean para realizar o hash de senhas utilizando o algoritmo BCrypt.
+     * Utilizado para codificar a senha no momento do cadastro do usuário.
+     */
+    @Bean
+    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    }
 }

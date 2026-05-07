@@ -1,118 +1,81 @@
 // Serviço de CRUD para Usuários.
-// Este serviço lida com Firebase Auth (para criação) e Firestore (para metadados).
+// Integração com API REST Spring Boot (RF02).
 
-import { 
-    doc, getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc, deleteDoc, collection, setDoc
-} from "firebase/firestore";
-// Importa os serviços de Auth e Firestore do firebaseConfig
-import { auth, db } from "../firebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
+const ENDPOINT = `${BASE_URL}/usuarios`;
 
-const COL_NAME = "usuarios";
-const colRef = collection(db, COL_NAME);
+// Helper para tratar respostas da API
+const handleResponse = async (response) => {
+    if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        const msg = errorBody.mensagem || `Erro HTTP ${response.status}`;
+        throw new Error(msg);
+    }
+    // 204 No Content não tem body
+    if (response.status === 204) return null;
+    return response.json();
+};
 
-/**
- * Cadastrar.
- * Este é um processo de duas etapas:
- * 1. Criar o usuário no Firebase Authentication (email/senha).
- * 2. Salvar os metadados (nome, matricula, etc.) no Firestore usando o UID do usuário como ID do documento.
- */
+// Cadastrar
 export const createUsuario = async (data) => {
-    try {
-        // Criar o usuário no Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.senha);
-        const uid = userCredential.user.uid;
-
-        // Remove a 'senha' para não salvar no banco de dados
-        const { senha, ...metadata } = data; 
-
-        // Passo 2: Salvar os metadados no Firestore
-        const payload = {
-            ...metadata,
-            uid: uid, // Armazena o UID de autenticação
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-            deleted: false
-        };
-        
-        // Usamos setDoc para definir um documento com um ID específico (o UID)
-        await setDoc(doc(db, COL_NAME, uid), payload);
-        
-        return { id: uid, success: true, message: "Usuário criado com sucesso!" };
-    } catch (error) {
-        console.error("Erro ao criar usuário: ", error);
-        // Trata erros comuns do Firebase Auth
-        if (error.code === 'auth/email-already-in-use') {
-            throw new Error("Este e-mail já está em uso.");
-        }
-        if (error.code === 'auth/weak-password') {
-            throw new Error("A senha deve ter no mínimo 6 caracteres.");
-        }
-        throw error;
-    }
+    const response = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    const result = await handleResponse(response);
+    return { ...result, success: true, message: "Usuário criado com sucesso!" };
 };
 
-/**
- * Atualizar.
- * Apenas atualiza os metadados no Firestore.
- * A atualização de e-mail ou senha no Auth é um fluxo complexo
- * e não será implementado neste formulário.
- */
-export const updateUsuario = async (id, data) => {
-    try {
-        // Remove 'email' e 'senha' para garantir que não sejam atualizados no Firestore
-        const { email, senha, ...updates } = data;
-        
-        const docRef = doc(db, COL_NAME, id);
-        const payload = {
-            ...updates,
-            updatedAt: serverTimestamp(),
-        };
-        await updateDoc(docRef, payload);
-        return { success: true, message: "Usuário atualizado com sucesso!" };
-    } catch (error) {
-        console.error("Erro ao atualizar usuário: ", error);
-        throw error;
-    } 
+// Atualizar
+export const updateUsuario = async (id, updates) => {
+    const response = await fetch(`${ENDPOINT}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+    });
+    const result = await handleResponse(response);
+    return { ...result, success: true, message: "Usuário atualizado com sucesso!" };
 };
 
-// Requisito "Consultar" (Listar todos)
+// Consultar (listar todos)
 export const getUsuarios = async () => {
-    try {
-        const snap = await getDocs(query(colRef, orderBy("nome", "asc")));
-        const usuarios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        return usuarios;
-    } catch (error) {
-        console.error("Erro ao buscar usuários: ", error);
-        throw error;
-    }
+    const response = await fetch(ENDPOINT);
+    return handleResponse(response);
 };
 
-// Requisito "Consultar" (Buscar por ID - usado na edição)
+// Consultar (buscar por ID)
 export const getUsuarioById = async (id) => {
-    try {
-        const docRef = doc(db, COL_NAME, id);
-        const snap = await getDoc(docRef);
-        if (!snap.exists()) return null;
-        return { id: snap.id, ...snap.data() };
-    } catch (error) {
-        console.error("Erro ao buscar usuário pelo ID: ", error);
-        throw error;
-    }
+    const response = await fetch(`${ENDPOINT}/${id}`);
+    return handleResponse(response);
 };
 
-/**
- * Excluir.
- * Aqui só será excluído o registro no Firestore.
- * O usuário no Firebase Authentication não será excluído,
- * pois isso requer privilégios de admin ou reautenticação.
- */
+// Pesquisar por nome (parcial, case-insensitive)
+export const searchByNome = async (nome) => {
+    const response = await fetch(`${ENDPOINT}/buscar?nome=${encodeURIComponent(nome)}`);
+    return handleResponse(response);
+};
+
+// Filtrar por unidade
+export const getUsuariosByUnidade = async (unidadeId) => {
+    const response = await fetch(`${ENDPOINT}/unidade/${unidadeId}`);
+    return handleResponse(response);
+};
+
+// Ativar/Desativar
+export const toggleAtivoUsuario = async (id) => {
+    const response = await fetch(`${ENDPOINT}/${id}/toggle-ativo`, {
+        method: "PATCH",
+    });
+    const result = await handleResponse(response);
+    return { ...result, success: true, message: `Usuário ${result.ativo ? 'ativado' : 'desativado'} com sucesso!` };
+};
+
+// Excluir
 export const deleteUsuario = async (id) => {
-    try {
-        await deleteDoc(doc(db, COL_NAME, id));
-        return { success: true, message: "Registro do usuário deletado com sucesso!" };
-    } catch (error) {
-        console.error("Erro ao deletar usuário: ", error);
-        throw error;
-    }
+    const response = await fetch(`${ENDPOINT}/${id}`, {
+        method: "DELETE",
+    });
+    await handleResponse(response);
+    return { success: true, message: "Usuário excluído com sucesso!" };
 };

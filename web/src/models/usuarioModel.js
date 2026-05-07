@@ -1,10 +1,11 @@
 export const initialUsuario = {
     email: '',
-    senha: '', // geralmente não armazenamos no Firestore
+    senha: '',
     nome: '',
     matricula: '',
     telefone: '',
-    funcao: 'Analista de TI', 
+    funcao: 'ANALISTA_TI', 
+    perfil: 'OPERADOR',
     unidadeId: '',
     observacoes: '',
 };

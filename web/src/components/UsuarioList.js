@@ -1,8 +1,8 @@
-// Componente de Lista para Consultar (listar) e Excluir Usuários.
+// Componente de Lista para Consultar (listar), Excluir e Ativar/Desativar Usuários.
 
 import React, { useEffect, useState } from "react";
-import { Button, Table, Modal } from "react-bootstrap";
-import { deleteUsuario, getUsuarios } from "../services/usuarioService";
+import { Button, Table, Modal, Badge } from "react-bootstrap";
+import { deleteUsuario, getUsuarios, toggleAtivoUsuario } from "../services/usuarioService";
 import ToastMessage from "./ToastMessage/ToastMessage";
 
 const UsuarioList = ({ onEdit }) => {
@@ -10,11 +10,11 @@ const UsuarioList = ({ onEdit }) => {
     const [showModal, setShowModal] = useState(false);
     const [usuarioToDelete, setUsuarioToDelete] = useState(null);
 
-    // ✅ Estado do Toast
+    // Estado do Toast
     const [toast, setToast] = useState({
         show: false,
         message: "",
-        type: "success", // success | error | info
+        type: "success", 
     });
 
     // Consultar (Listar)
@@ -36,7 +36,27 @@ const UsuarioList = ({ onEdit }) => {
         fetchUsuarios();
     }, []);
 
-    // Abrir modal de confirmação
+    // Alternar status do usuário (Ativo/Inativo)
+    const handleToggleAtivo = async (usuario) => {
+        try {
+            const result = await toggleAtivoUsuario(usuario.id);
+            setToast({
+                show: true,
+                message: result.message,
+                type: "success",
+            });
+            fetchUsuarios(); // Recarrega a lista
+        } catch (error) {
+            console.error("Erro ao alternar status do usuário:", error);
+            setToast({
+                show: true,
+                message: error.message || "Erro ao alterar o status do usuário.",
+                type: "error",
+            });
+        }
+    };
+
+    // Abrir modal de confirmação de exclusão
     const handleShowModal = (usuario) => {
         setUsuarioToDelete(usuario);
         setShowModal(true);
@@ -56,7 +76,7 @@ const UsuarioList = ({ onEdit }) => {
             await deleteUsuario(usuarioToDelete.id);
             setToast({
                 show: true,
-                message: `Usuário "${usuarioToDelete.nome}" excluído com sucesso.`,
+                message: `Usuário "${usuarioToDelete.nome}" excluído permanentemente.`,
                 type: "success",
             });
             fetchUsuarios();
@@ -64,7 +84,7 @@ const UsuarioList = ({ onEdit }) => {
             console.error("Erro ao excluir usuário:", error);
             setToast({
                 show: true,
-                message: "Erro ao excluir o usuário.",
+                message: error.message || "Erro ao excluir o usuário.",
                 type: "error",
             });
         } finally {
@@ -81,31 +101,52 @@ const UsuarioList = ({ onEdit }) => {
                     <tr>
                         <th>Nome</th>
                         <th>E-mail</th>
-                        <th>Matrícula</th>
+                        <th>Unidade</th>
                         <th>Função</th>
-                        <th style={{ width: "160px" }}>Ações</th>
+                        <th>Perfil</th>
+                        <th>Status</th>
+                        <th style={{ width: "240px", textAlign: "center" }}>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {usuarios.length > 0 ? (
+                    {usuarios && usuarios.length > 0 ? (
                         usuarios.map((user) => (
                             <tr key={user.id}>
-                                <td>{user.nome}</td>
-                                <td>{user.email}</td>
-                                <td>{user.matricula || "-"}</td>
-                                <td>{user.funcao}</td>
-                                <td>
+                                <td className="align-middle">{user.nome}</td>
+                                <td className="align-middle">{user.email}</td>
+                                <td className="align-middle">{user.unidadeSigla || "-"}</td>
+                                <td className="align-middle">{user.funcaoDescricao || user.funcao}</td>
+                                <td className="align-middle">
+                                    <Badge bg={user.perfil === 'ADMIN' ? 'dark' : 'secondary'}>
+                                        {user.perfil}
+                                    </Badge>
+                                </td>
+                                <td className="align-middle text-center">
+                                    <Badge bg={user.ativo ? 'success' : 'danger'}>
+                                        {user.ativo ? 'Ativo' : 'Inativo'}
+                                    </Badge>
+                                </td>
+                                <td className="align-middle text-center">
                                     <Button
                                         variant="warning"
                                         size="sm"
-                                        className="me-2"
+                                        className="me-2 mb-1"
                                         onClick={() => onEdit(user)}
                                     >
                                         Editar
                                     </Button>
                                     <Button
+                                        variant={user.ativo ? "secondary" : "success"}
+                                        size="sm"
+                                        className="me-2 mb-1"
+                                        onClick={() => handleToggleAtivo(user)}
+                                    >
+                                        {user.ativo ? "Desativar" : "Ativar"}
+                                    </Button>
+                                    <Button
                                         variant="danger"
                                         size="sm"
+                                        className="mb-1"
                                         onClick={() => handleShowModal(user)}
                                     >
                                         Excluir
@@ -115,7 +156,7 @@ const UsuarioList = ({ onEdit }) => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="5" className="text-center">
+                            <td colSpan="7" className="text-center">
                                 Nenhum usuário cadastrado.
                             </td>
                         </tr>
@@ -123,16 +164,16 @@ const UsuarioList = ({ onEdit }) => {
                 </tbody>
             </Table>
 
-            {/* ✅ Modal de confirmação */}
+            {/* Modal de confirmação */}
             <Modal show={showModal} onHide={handleCloseModal} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Confirmar exclusão</Modal.Title>
+                    <Modal.Title>Confirmar exclusão permanente</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {usuarioToDelete ? (
                         <>
                             <p>
-                                Tem certeza que deseja <strong>excluir</strong> o
+                                Tem certeza que deseja <strong>excluir permanentemente</strong> o
                                 usuário:
                             </p>
                             <p className="mb-0">
@@ -141,8 +182,7 @@ const UsuarioList = ({ onEdit }) => {
                             </p>
                             <hr />
                             <p className="text-danger small mb-0">
-                                ⚠️ Isso removerá o registro do Firestore, mas não
-                                afetará o usuário no sistema de autenticação.
+                                ⚠️ Atenção: Esta ação não pode ser desfeita. Se o usuário já tiver registros (como incidentes), a exclusão pode falhar. Nesses casos, prefira apenas <strong>Desativar</strong> o usuário.
                             </p>
                         </>
                     ) : (
@@ -154,12 +194,12 @@ const UsuarioList = ({ onEdit }) => {
                         Cancelar
                     </Button>
                     <Button variant="danger" onClick={handleConfirmDelete}>
-                        Excluir
+                        Excluir Permanentemente
                     </Button>
                 </Modal.Footer>
             </Modal>
 
-            {/* ✅ Toast de mensagens */}
+            {/* Toast de mensagens */}
             <ToastMessage
                 show={toast.show}
                 message={toast.message}

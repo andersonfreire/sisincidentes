@@ -7,13 +7,13 @@ import { getUnidades } from "../services/unidadeAdministrativaService";
 import { initialUsuario } from "../models/usuarioModel";
 import ToastMessage from "./ToastMessage/ToastMessage";
 
-// Lista de opções de Função
+// Lista de opções de Função mapeando Enum do backend
 const funcoes = [
-    "Analista de TI",
-    "Coordenador de SI",
-    "Gestor de TI",
-    "Superintendente de TI",
-    "Técnico de TI",
+    { value: "ANALISTA_TI", label: "Analista de TI" },
+    { value: "COORDENADOR_SI", label: "Coordenador de SI" },
+    { value: "GESTOR_TI", label: "Gestor de TI" },
+    { value: "SUPERINTENDENTE_TI", label: "Superintendente de TI" },
+    { value: "TECNICO_TI", label: "Técnico de TI" },
 ];
 
 const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
@@ -21,11 +21,11 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
     const [unidades, setUnidades] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // ✅ Estado do Toast
+    // Estado do Toast
     const [toast, setToast] = useState({
         show: false,
         message: "",
-        type: "success", // success | error | warning | info
+        type: "success", 
     });
 
     const isEditMode = !!selectedUsuario;
@@ -56,7 +56,10 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
 
     useEffect(() => {
         if (selectedUsuario) {
-            setUsuarioData(selectedUsuario);
+            setUsuarioData({
+                ...selectedUsuario,
+                senha: '' // Senha não vem da API. Na edição, deixamos vazia para não alterar, a menos que o usuário digite algo.
+            });
         } else {
             setUsuarioData(initialUsuario);
         }
@@ -67,15 +70,23 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
         setLoading(true);
 
         try {
+            let payload = { ...usuarioData };
+            
+            // Se for edição e a senha estiver vazia, não envia o campo
+            // para não disparar o erro de validação @Size(min=6) no backend
+            if (isEditMode && !payload.senha) {
+                delete payload.senha;
+            }
+
             if (isEditMode) {
-                await updateUsuario(selectedUsuario.id, usuarioData);
+                await updateUsuario(selectedUsuario.id, payload);
                 setToast({
                     show: true,
                     message: "Usuário atualizado com sucesso!",
                     type: "success",
                 });
             } else {
-                await createUsuario(usuarioData);
+                await createUsuario(payload);
                 setToast({
                     show: true,
                     message: "Usuário criado com sucesso!",
@@ -107,7 +118,7 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
 
             <Form onSubmit={handleSubmit}>
                 <Row>
-                    <Col md={isEditMode ? 12 : 8}>
+                    <Col md={isEditMode ? 8 : 8}>
                         <Form.Group className="mb-3">
                             <Form.Label>E-mail</Form.Label>
                             <Form.Control
@@ -117,26 +128,24 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
                                 value={usuarioData.email}
                                 onChange={handleChange}
                                 required
-                                disabled={isEditMode}
                             />
                         </Form.Group>
                     </Col>
 
-                    {!isEditMode && (
-                        <Col md={4}>
-                            <Form.Group className="mb-3">
-                                <Form.Label>Senha</Form.Label>
-                                <Form.Control
-                                    type="password"
-                                    name="senha"
-                                    placeholder="Senha de acesso"
-                                    value={usuarioData.senha}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </Form.Group>
-                        </Col>
-                    )}
+                    <Col md={4}>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Senha</Form.Label>
+                            <Form.Control
+                                type="password"
+                                name="senha"
+                                placeholder={isEditMode ? "Deixe em branco para manter a atual" : "Senha de acesso"}
+                                value={usuarioData.senha}
+                                onChange={handleChange}
+                                required={!isEditMode}
+                                minLength={6}
+                            />
+                        </Form.Group>
+                    </Col>
                 </Row>
 
                 <Row>
@@ -160,7 +169,7 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
                                 type="text"
                                 name="matricula"
                                 placeholder="Matrícula funcional"
-                                value={usuarioData.matricula}
+                                value={usuarioData.matricula || ''}
                                 onChange={handleChange}
                             />
                         </Form.Group>
@@ -168,7 +177,7 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
                 </Row>
 
                 <Row>
-                    <Col md={5}>
+                    <Col md={4}>
                         <Form.Group className="mb-3">
                             <Form.Label>Unidade Administrativa</Form.Label>
                             <Form.Select
@@ -187,7 +196,7 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
                         </Form.Group>
                     </Col>
 
-                    <Col md={4}>
+                    <Col md={3}>
                         <Form.Group className="mb-3">
                             <Form.Label>Função</Form.Label>
                             <Form.Select
@@ -198,10 +207,25 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
                             >
                                 <option value="">-- Selecione uma função --</option>
                                 {funcoes.map((f) => (
-                                    <option key={f} value={f}>
-                                        {f}
+                                    <option key={f.value} value={f.value}>
+                                        {f.label}
                                     </option>
                                 ))}
+                            </Form.Select>
+                        </Form.Group>
+                    </Col>
+
+                    <Col md={2}>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Perfil</Form.Label>
+                            <Form.Select
+                                name="perfil"
+                                value={usuarioData.perfil}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="OPERADOR">Operador</option>
+                                <option value="ADMIN">Administrador</option>
                             </Form.Select>
                         </Form.Group>
                     </Col>
@@ -213,7 +237,7 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
                                 type="text"
                                 name="telefone"
                                 placeholder="Contato"
-                                value={usuarioData.telefone}
+                                value={usuarioData.telefone || ''}
                                 onChange={handleChange}
                             />
                         </Form.Group>
@@ -224,10 +248,10 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
                     <Form.Label>Observações</Form.Label>
                     <Form.Control
                         as="textarea"
-                        rows={3}
+                        rows={2}
                         name="observacoes"
                         placeholder="Anotações adicionais"
-                        value={usuarioData.observacoes}
+                        value={usuarioData.observacoes || ''}
                         onChange={handleChange}
                     />
                 </Form.Group>
@@ -240,7 +264,6 @@ const UsuarioForm = ({ selectedUsuario, setSelectedUsuario, onSave }) => {
                 </Button>
             </Form>
 
-            {/* ✅ Componente de Toast */}
             <ToastMessage
                 show={toast.show}
                 message={toast.message}

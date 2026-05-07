@@ -1,4 +1,4 @@
-# 🧭 SisIncidentes — Sistema de Gerenciamento de Incidentes
+# SisIncidentes — Sistema de Gerenciamento de Incidentes
 
 O **SisIncidentes** é uma solução robusta para o registro, controle e análise de incidentes de segurança. O projeto foi recentemente migrado de uma arquitetura baseada em Firebase para uma arquitetura moderna e escalável utilizando **Java 21** e **Spring Boot 3**.
 

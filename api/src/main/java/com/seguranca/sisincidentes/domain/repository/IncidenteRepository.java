@@ -45,4 +45,19 @@ public interface IncidenteRepository extends JpaRepository<Incidente, Long> {
      */
     @Query("SELECT DISTINCT i FROM Incidente i LEFT JOIN FETCH i.vulnerabilidades WHERE i.status = :status ORDER BY i.dataRegistro DESC")
     List<Incidente> findByStatus(@Param("status") String status);
+
+    /**
+     * Conta o total de incidentes agrupados por status.
+     * Utilizado para dashboards e estatísticas (RF09).
+     * * @return Lista de objetos contendo [status, count]
+     */
+    @Query("SELECT i.status, COUNT(i) FROM Incidente i GROUP BY i.status")
+    List<Object[]> countIncidentesByStatus();
+
+    /**
+     * Conta o total de incidentes vinculados a cada severidade de vulnerabilidade.
+     * * @return Lista de objetos contendo [severidade, count]
+     */
+    @Query("SELECT v.severidade, COUNT(i) FROM Incidente i JOIN i.vulnerabilidades v GROUP BY v.severidade")
+    List<Object[]> countByVulnerabilidadeSeveridade();
 }

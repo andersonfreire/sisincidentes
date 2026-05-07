@@ -21,10 +21,7 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // 🔹 Dependendo do Auth, pode ser user.uid em vez de user.id
-        console.log(user)
-        console.log(user.uid)
-        const data = await getUsuarioById(user?.uid || user?.uid);
+        const data = await getUsuarioById(user.id);
         setFormData(data);
       } catch (error) {
         console.error("Erro ao buscar perfil:", error);
@@ -47,7 +44,7 @@ const UserProfile = () => {
     setSaving(true);
 
     try {
-      await updateUsuario(user?.id || user?.uid, formData);
+      await updateUsuario(user.id, formData);
       showToast("Perfil atualizado com sucesso!", "success");
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error);

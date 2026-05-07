@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
@@ -13,8 +12,8 @@ import java.util.List;
  * Configuração de CORS (Cross-Origin Resource Sharing).
  *
  * <p>Permite que o front-end React (rodando em {@code http://localhost:3000})
- * consuma os endpoints do back-end Spring Boot (rodando em {@code http://localhost:8080})
- * sem bloqueios de política de mesma origem do browser.</p>
+ * consuma os endpoints do back-end Spring Boot sem bloqueios de política
+ * de mesma origem do browser.</p>
  */
 @Configuration
 public class CorsConfig {
@@ -22,16 +21,13 @@ public class CorsConfig {
     /**
      * Configura as regras de CORS globais para toda a aplicação.
      *
-     * <ul>
-     *   <li>Origens permitidas: localhost:3000 (React dev) e localhost:8080 (API dev)</li>
-     *   <li>Métodos permitidos: GET, POST, PUT, DELETE, OPTIONS</li>
-     *   <li>Headers permitidos: qualquer (incluindo Authorization para futura autenticação JWT)</li>
-     *   <li>Credenciais: permitidas (necessário para cookies/JWT em futuras versões)</li>
-     *   <li>Max Age: 1 hora (evita pre-flight repetitivos)</li>
-     * </ul>
+     * <p>Define origens, métodos e headers permitidos, além de configurar
+     * o suporte a credenciais para autenticação JWT.</p>
+     *
+     * @return Uma instância de {@link CorsConfigurationSource} configurada.
      */
     @Bean
-    public CorsFilter corsFilter() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
         // Origens permitidas
@@ -43,10 +39,19 @@ public class CorsConfig {
         // Métodos HTTP permitidos
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // Headers permitidos (qualquer header, incluindo Authorization para JWT)
-        config.setAllowedHeaders(List.of("*"));
+        // Headers permitidos (Explicitados para evitar avisos com allowCredentials)
+        config.setAllowedHeaders(List.of(
+            "Authorization",
+            "Cache-Control",
+            "Content-Type",
+            "Accept",
+            "Origin",
+            "X-Requested-With",
+            "Access-Control-Request-Method",
+            "Access-Control-Request-Headers"
+        ));
 
-        // Expõe o header Location (útil para POST com 201 Created)
+        // Expõe headers úteis para o front-end
         config.setExposedHeaders(List.of("Location", "Content-Type"));
 
         // Permite cookies/credenciais (necessário para JWT no futuro)
@@ -58,6 +63,6 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
-        return new CorsFilter(source);
+        return source;
     }
 }

@@ -8,10 +8,12 @@ import com.seguranca.sisincidentes.domain.repository.UnidadeAdministrativaReposi
 import com.seguranca.sisincidentes.service.UnidadeAdministrativaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -36,7 +38,7 @@ public class UnidadeAdministrativaServiceImpl implements UnidadeAdministrativaSe
 
     @Override
     @Transactional
-    public UnidadeAdministrativaResponseDTO create(UnidadeAdministrativaRequestDTO requestDTO) {
+    public UnidadeAdministrativaResponseDTO create(@NonNull UnidadeAdministrativaRequestDTO requestDTO) {
         log.info("Criando unidade administrativa com código: {}", requestDTO.getCodigo());
 
         // Validação de unicidade do código
@@ -47,7 +49,7 @@ public class UnidadeAdministrativaServiceImpl implements UnidadeAdministrativaSe
         }
 
         UnidadeAdministrativa entity = toEntity(requestDTO);
-        UnidadeAdministrativa saved = repository.save(entity);
+        UnidadeAdministrativa saved = saveAndValidate(entity);
 
         log.info("Unidade administrativa criada com sucesso. ID: {}", saved.getId());
         return toResponseDTO(saved);
@@ -59,7 +61,8 @@ public class UnidadeAdministrativaServiceImpl implements UnidadeAdministrativaSe
 
     @Override
     @Transactional
-    public UnidadeAdministrativaResponseDTO update(Long id, UnidadeAdministrativaRequestDTO requestDTO) {
+    public UnidadeAdministrativaResponseDTO update(@NonNull Long id, @NonNull UnidadeAdministrativaRequestDTO requestDTO) {
+        Objects.requireNonNull(id, "O ID da unidade administrativa não pode ser nulo para atualização.");
         log.info("Atualizando unidade administrativa ID: {}", id);
 
         UnidadeAdministrativa existing = repository.findById(id)
@@ -79,7 +82,7 @@ public class UnidadeAdministrativaServiceImpl implements UnidadeAdministrativaSe
         existing.setResponsavel(requestDTO.getResponsavel());
         existing.setContato(requestDTO.getContato());
 
-        UnidadeAdministrativa updated = repository.save(existing);
+        UnidadeAdministrativa updated = saveAndValidate(existing);
 
         log.info("Unidade administrativa ID {} atualizada com sucesso.", id);
         return toResponseDTO(updated);
@@ -101,7 +104,8 @@ public class UnidadeAdministrativaServiceImpl implements UnidadeAdministrativaSe
 
     @Override
     @Transactional(readOnly = true)
-    public UnidadeAdministrativaResponseDTO findById(Long id) {
+    public UnidadeAdministrativaResponseDTO findById(@NonNull Long id) {
+        Objects.requireNonNull(id, "O ID da unidade administrativa não pode ser nulo para consulta.");
         log.debug("Buscando unidade administrativa por ID: {}", id);
         UnidadeAdministrativa entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_NAME, "id", id));
@@ -134,7 +138,8 @@ public class UnidadeAdministrativaServiceImpl implements UnidadeAdministrativaSe
 
     @Override
     @Transactional
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
+        Objects.requireNonNull(id, "O ID da unidade administrativa não pode ser nulo para exclusão.");
         log.info("Excluindo unidade administrativa ID: {}", id);
 
         if (!repository.existsById(id)) {
@@ -176,5 +181,16 @@ public class UnidadeAdministrativaServiceImpl implements UnidadeAdministrativaSe
                 .dataCriacao(entity.getDataCriacao())
                 .dataAtualizacao(entity.getDataAtualizacao())
                 .build();
+    }
+
+    /**
+     * Salva uma entidade e valida que o retorno não seja nulo.
+     * Encapsula a validação de nulidade para satisfazer a análise estática da IDE.
+     * O framework já gerencia a nulidade e garantimos a segurança com requireNonNull.
+     */
+    @NonNull
+    @SuppressWarnings("null")
+    private UnidadeAdministrativa saveAndValidate(UnidadeAdministrativa entity) {
+        return Objects.requireNonNull(repository.save(entity));
     }
 }

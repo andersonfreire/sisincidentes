@@ -1,43 +1,68 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebaseConfig";
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
-// Usuário simulado para o modo de desenvolvimento (DEV_MODE)
-// Remove ou defina REACT_APP_DEV_MODE=false ao ativar autenticação JWT completa
-const DEV_USER = {
-  uid: "dev-user-001",
-  email: "dev@sisincidentes.gov.br",
-  displayName: "Desenvolvedor",
-};
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Modo DEV: simula usuário logado sem depender do Firebase Auth
-    if (process.env.REACT_APP_DEV_MODE === "true") {
-      setUser(DEV_USER);
-      setLoading(false);
-      return;
-    }
+    // Efeito para carregar o usuário do localStorage ao iniciar
+    useEffect(() => {
+        const storedUser = localStorage.getItem("@SisIncidentes:user");
+        const storedToken = localStorage.getItem("@SisIncidentes:token");
 
-    // Modo PRODUÇÃO: usa Firebase Authentication normalmente
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setLoading(false);
-    });
-    return () => unsub();
-  }, []);
+        if (storedUser && storedToken) {
+            setUser(JSON.parse(storedUser));
+        }
+        setLoading(false);
+    }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    // Função de Login via API Java
+    const login = async (email, senha) => {
+        try {
+            const response = await fetch(`${API_URL}/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, senha }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.mensagem || "Credenciais inválidas.");
+            }
+
+            // Salva no estado e no localStorage
+            const userData = data.usuario;
+            const token = data.token;
+
+            localStorage.setItem("@SisIncidentes:user", JSON.stringify(userData));
+            localStorage.setItem("@SisIncidentes:token", token);
+            
+            setUser(userData);
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    };
+
+    // Função de Logout
+    const logout = () => {
+        localStorage.removeItem("@SisIncidentes:user");
+        localStorage.removeItem("@SisIncidentes:token");
+        setUser(null);
+    };
+
+    // Helper para obter o Token
+    const getToken = () => localStorage.getItem("@SisIncidentes:token");
+
+    return (
+        <AuthContext.Provider value={{ user, loading, login, logout, getToken }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
-

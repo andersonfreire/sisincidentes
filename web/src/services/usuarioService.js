@@ -1,81 +1,57 @@
-// Serviço de CRUD para Usuários.
-// Integração com API REST Spring Boot (RF02).
+import { request } from "./api";
 
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
-const ENDPOINT = `${BASE_URL}/usuarios`;
-
-// Helper para tratar respostas da API
-const handleResponse = async (response) => {
-    if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        const msg = errorBody.mensagem || `Erro HTTP ${response.status}`;
-        throw new Error(msg);
-    }
-    // 204 No Content não tem body
-    if (response.status === 204) return null;
-    return response.json();
-};
+const ENDPOINT = "/usuarios";
 
 // Cadastrar
 export const createUsuario = async (data) => {
-    const response = await fetch(ENDPOINT, {
+    const result = await request(ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });
-    const result = await handleResponse(response);
     return { ...result, success: true, message: "Usuário criado com sucesso!" };
 };
 
 // Atualizar
 export const updateUsuario = async (id, updates) => {
-    const response = await fetch(`${ENDPOINT}/${id}`, {
+    const result = await request(`${ENDPOINT}/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
     });
-    const result = await handleResponse(response);
     return { ...result, success: true, message: "Usuário atualizado com sucesso!" };
 };
 
 // Consultar (listar todos)
 export const getUsuarios = async () => {
-    const response = await fetch(ENDPOINT);
-    return handleResponse(response);
+    return request(ENDPOINT);
 };
 
 // Consultar (buscar por ID)
 export const getUsuarioById = async (id) => {
-    const response = await fetch(`${ENDPOINT}/${id}`);
-    return handleResponse(response);
+    return request(`${ENDPOINT}/${id}`);
 };
 
-// Pesquisar por nome (parcial, case-insensitive)
+// Pesquisar por nome
 export const searchByNome = async (nome) => {
-    const response = await fetch(`${ENDPOINT}/buscar?nome=${encodeURIComponent(nome)}`);
-    return handleResponse(response);
+    return request(`${ENDPOINT}/buscar?nome=${encodeURIComponent(nome)}`);
 };
 
 // Filtrar por unidade
 export const getUsuariosByUnidade = async (unidadeId) => {
-    const response = await fetch(`${ENDPOINT}/unidade/${unidadeId}`);
-    return handleResponse(response);
+    return request(`${ENDPOINT}/unidade/${unidadeId}`);
 };
 
 // Ativar/Desativar
 export const toggleAtivoUsuario = async (id) => {
-    const response = await fetch(`${ENDPOINT}/${id}/toggle-ativo`, {
+    const result = await request(`${ENDPOINT}/${id}/toggle-ativo`, {
         method: "PATCH",
     });
-    const result = await handleResponse(response);
     return { ...result, success: true, message: `Usuário ${result.ativo ? 'ativado' : 'desativado'} com sucesso!` };
 };
 
 // Excluir
 export const deleteUsuario = async (id) => {
-    const response = await fetch(`${ENDPOINT}/${id}`, {
+    await request(`${ENDPOINT}/${id}`, {
         method: "DELETE",
     });
-    await handleResponse(response);
     return { success: true, message: "Usuário excluído com sucesso!" };
 };

@@ -1,72 +1,49 @@
-// Serviço de CRUD para Unidades Administrativas.
-// Integração com API REST Spring Boot (RF01).
+import { request } from "./api";
 
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
-const ENDPOINT = `${BASE_URL}/unidades`;
-
-// Helper para tratar respostas da API
-const handleResponse = async (response) => {
-    if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        const msg = errorBody.mensagem || `Erro HTTP ${response.status}`;
-        throw new Error(msg);
-    }
-    // 204 No Content não tem body
-    if (response.status === 204) return null;
-    return response.json();
-};
+const ENDPOINT = "/unidades";
 
 // Cadastrar
 export const createUnidade = async (data) => {
-    const response = await fetch(ENDPOINT, {
+    const result = await request(ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });
-    const result = await handleResponse(response);
     return { ...result, success: true, message: "Unidade criada com sucesso!" };
 };
 
 // Atualizar
 export const updateUnidade = async (id, updates) => {
-    const response = await fetch(`${ENDPOINT}/${id}`, {
+    const result = await request(`${ENDPOINT}/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
     });
-    const result = await handleResponse(response);
     return { ...result, success: true, message: "Unidade atualizada com sucesso!" };
 };
 
 // Consultar (listar todas)
 export const getUnidades = async () => {
-    const response = await fetch(ENDPOINT);
-    return handleResponse(response);
+    return request(ENDPOINT);
 };
 
 // Consultar (buscar por ID)
 export const getUnidadeById = async (id) => {
-    const response = await fetch(`${ENDPOINT}/${id}`);
-    return handleResponse(response);
+    return request(`${ENDPOINT}/${id}`);
 };
 
-// Pesquisar por sigla (parcial, case-insensitive)
+// Pesquisar por sigla
 export const searchBySigla = async (sigla) => {
-    const response = await fetch(`${ENDPOINT}/buscar?sigla=${encodeURIComponent(sigla)}`);
-    return handleResponse(response);
+    return request(`${ENDPOINT}/buscar?sigla=${encodeURIComponent(sigla)}`);
 };
 
-// Pesquisar por título (parcial, case-insensitive)
+// Pesquisar por título
 export const searchByTitulo = async (titulo) => {
-    const response = await fetch(`${ENDPOINT}/buscar?titulo=${encodeURIComponent(titulo)}`);
-    return handleResponse(response);
+    return request(`${ENDPOINT}/buscar?titulo=${encodeURIComponent(titulo)}`);
 };
 
 // Excluir
 export const deleteUnidade = async (id) => {
-    const response = await fetch(`${ENDPOINT}/${id}`, {
+    await request(`${ENDPOINT}/${id}`, {
         method: "DELETE",
     });
-    await handleResponse(response);
     return { success: true, message: "Unidade deletada com sucesso!" };
 };

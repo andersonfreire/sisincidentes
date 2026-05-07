@@ -2,6 +2,7 @@ package com.seguranca.sisincidentes.service;
 
 import com.seguranca.sisincidentes.api.dto.UnidadeAdministrativaRequestDTO;
 import com.seguranca.sisincidentes.api.dto.UnidadeAdministrativaResponseDTO;
+import org.springframework.lang.NonNull;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public interface UnidadeAdministrativaService {
      * @return DTO com os dados da unidade criada (incluindo ID gerado)
      * @throws IllegalArgumentException se o código já estiver em uso
      */
-    UnidadeAdministrativaResponseDTO create(UnidadeAdministrativaRequestDTO requestDTO);
+    UnidadeAdministrativaResponseDTO create(@NonNull UnidadeAdministrativaRequestDTO requestDTO);
 
     /**
      * Atualiza uma Unidade Administrativa existente.
@@ -31,7 +32,7 @@ public interface UnidadeAdministrativaService {
      * @throws com.seguranca.sisincidentes.api.exception.ResourceNotFoundException se o ID não existir
      * @throws IllegalArgumentException se o código já estiver em uso por outra unidade
      */
-    UnidadeAdministrativaResponseDTO update(Long id, UnidadeAdministrativaRequestDTO requestDTO);
+    UnidadeAdministrativaResponseDTO update(@NonNull Long id, @NonNull UnidadeAdministrativaRequestDTO requestDTO);
 
     /**
      * Lista todas as Unidades Administrativas cadastradas, ordenadas por título.
@@ -47,7 +48,7 @@ public interface UnidadeAdministrativaService {
      * @return DTO com os dados da unidade encontrada
      * @throws com.seguranca.sisincidentes.api.exception.ResourceNotFoundException se o ID não existir
      */
-    UnidadeAdministrativaResponseDTO findById(Long id);
+    UnidadeAdministrativaResponseDTO findById(@NonNull Long id);
 
     /**
      * Exclui uma Unidade Administrativa pelo seu identificador único.
@@ -55,7 +56,7 @@ public interface UnidadeAdministrativaService {
      * @param id identificador da unidade a ser excluída
      * @throws com.seguranca.sisincidentes.api.exception.ResourceNotFoundException se o ID não existir
      */
-    void delete(Long id);
+    void delete(@NonNull Long id);
 
     /**
      * Busca Unidades Administrativas cuja sigla contenha o termo informado.

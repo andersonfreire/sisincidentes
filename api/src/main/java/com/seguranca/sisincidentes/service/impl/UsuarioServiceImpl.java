@@ -12,11 +12,13 @@ import com.seguranca.sisincidentes.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -50,7 +52,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
-    public UsuarioResponseDTO create(UsuarioRequestDTO requestDTO) {
+    public UsuarioResponseDTO create(@NonNull UsuarioRequestDTO requestDTO) {
         log.info("Criando usuário com e-mail: {}", requestDTO.getEmail());
 
         // Valida unicidade do e-mail
@@ -79,7 +81,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
-    public UsuarioResponseDTO update(Long id, UsuarioRequestDTO requestDTO) {
+    public UsuarioResponseDTO update(@NonNull Long id, @NonNull UsuarioRequestDTO requestDTO) {
         log.info("Atualizando usuário ID: {}", id);
 
         Usuario existing = findUsuarioOrThrow(id);
@@ -132,7 +134,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional(readOnly = true)
-    public UsuarioResponseDTO findById(Long id) {
+    public UsuarioResponseDTO findById(@NonNull Long id) {
         log.debug("Buscando usuário por ID: {}", id);
         return toResponseDTO(findUsuarioOrThrow(id));
     }
@@ -149,7 +151,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UsuarioResponseDTO> findByUnidade(Long unidadeId) {
+    public List<UsuarioResponseDTO> findByUnidade(@NonNull Long unidadeId) {
         log.debug("Buscando usuários da unidade ID: {}", unidadeId);
         return usuarioRepository.findByUnidadeId(unidadeId)
                 .stream()
@@ -163,7 +165,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
         log.info("Excluindo usuário ID: {}", id);
 
         if (!usuarioRepository.existsById(id)) {
@@ -180,7 +182,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
-    public UsuarioResponseDTO toggleAtivo(Long id) {
+    public UsuarioResponseDTO toggleAtivo(@NonNull Long id) {
         log.info("Alternando status ativo/inativo do usuário ID: {}", id);
 
         Usuario usuario = findUsuarioOrThrow(id);
@@ -196,11 +198,13 @@ public class UsuarioServiceImpl implements UsuarioService {
     // =========================================================
 
     private Usuario findUsuarioOrThrow(Long id) {
+        Objects.requireNonNull(id, "O ID do usuário não pode ser nulo.");
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_NAME, "id", id));
     }
 
     private UnidadeAdministrativa findUnidadeOrThrow(Long unidadeId) {
+        Objects.requireNonNull(unidadeId, "O ID da unidade administrativa não pode ser nulo.");
         return unidadeRepository.findById(unidadeId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                     "Unidade Administrativa", "id", unidadeId
@@ -219,8 +223,9 @@ public class UsuarioServiceImpl implements UsuarioService {
      * @param unidade  entidade Unidade Administrativa resolvida
      * @return entidade pronta para persistência
      */
+    @NonNull
     private Usuario toEntity(UsuarioRequestDTO dto, String senhaHash, UnidadeAdministrativa unidade) {
-        return Usuario.builder()
+        return Objects.requireNonNull(Usuario.builder()
                 .email(dto.getEmail())
                 .senha(senhaHash)
                 .nome(dto.getNome())
@@ -230,7 +235,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .perfil(dto.getPerfil() != null ? dto.getPerfil() : Perfil.OPERADOR)
                 .observacoes(dto.getObservacoes())
                 .unidade(unidade)
-                .build();
+                .build());
     }
 
     /**
@@ -240,8 +245,9 @@ public class UsuarioServiceImpl implements UsuarioService {
      * @param entity entidade gerenciada pelo JPA
      * @return DTO de resposta sem senha
      */
+    @NonNull
     private UsuarioResponseDTO toResponseDTO(Usuario entity) {
-        return UsuarioResponseDTO.builder()
+        return Objects.requireNonNull(UsuarioResponseDTO.builder()
                 .id(entity.getId())
                 .email(entity.getEmail())
                 .nome(entity.getNome())
@@ -257,6 +263,6 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .unidadeSigla(entity.getUnidade().getSigla())
                 .dataCriacao(entity.getDataCriacao())
                 .dataAtualizacao(entity.getDataAtualizacao())
-                .build();
+                .build());
     }
 }

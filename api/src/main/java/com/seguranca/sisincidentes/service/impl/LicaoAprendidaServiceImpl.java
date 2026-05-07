@@ -1,5 +1,13 @@
 package com.seguranca.sisincidentes.service.impl;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.seguranca.sisincidentes.api.dto.LicaoAprendidaRequestDTO;
 import com.seguranca.sisincidentes.api.dto.LicaoAprendidaResponseDTO;
 import com.seguranca.sisincidentes.api.exception.ResourceNotFoundException;
@@ -8,20 +16,16 @@ import com.seguranca.sisincidentes.domain.model.LicaoAprendida;
 import com.seguranca.sisincidentes.domain.repository.IncidenteRepository;
 import com.seguranca.sisincidentes.domain.repository.LicaoAprendidaRepository;
 import com.seguranca.sisincidentes.service.LicaoAprendidaService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Implementação concreta do serviço de Lições Aprendidas.
  *
- * <p>Concentra a lógica de negócio para documentação post-mortem:</p>
+ * <p>
+ * Concentra a lógica de negócio para documentação post-mortem:
+ * </p>
  * <ul>
  * <li>Validação de unicidade para relacionamento 1:1 com Incidentes.</li>
  * <li>Mapeamento manual entre Entidade e DTO via Builder.</li>
@@ -52,13 +56,13 @@ public class LicaoAprendidaServiceImpl implements LicaoAprendidaService {
         // Valida restrição de integridade 1:1
         licaoRepository.findByIncidenteId(incidenteId).ifPresent(l -> {
             throw new IllegalArgumentException(
-                String.format("O incidente ID %d já possui uma lição aprendida registrada.", incidenteId)
-            );
+                    String.format("O incidente ID %d já possui uma lição aprendida registrada.", incidenteId));
         });
 
         LicaoAprendida entity = toEntity(requestDTO, incidente);
 
-        // Chamada via método auxiliar para conformidade com @Nullable e segurança de tipos
+        // Chamada via método auxiliar para conformidade com @Nullable e segurança de
+        // tipos
         LicaoAprendida saved = Objects.requireNonNull(saveInternal(entity), "Erro ao persistir a lição aprendida");
 
         log.info("Lição aprendida registrada com sucesso. ID: {}", saved.getId());
@@ -98,7 +102,7 @@ public class LicaoAprendidaServiceImpl implements LicaoAprendidaService {
     }
 
     // =========================================================
-    //  Mapeamentos e Helpers
+    // Mapeamentos e Helpers
     // =========================================================
 
     private LicaoAprendida toEntity(LicaoAprendidaRequestDTO dto, Incidente incidente) {
@@ -120,10 +124,12 @@ public class LicaoAprendidaServiceImpl implements LicaoAprendidaService {
 
     /**
      * Método auxiliar para conformidade de nulidade.
-     * Encapsula o retorno do repositório permitindo o uso de @Nullable no contrato do método.
+     * Encapsula o retorno do repositório permitindo o uso de @Nullable no contrato
+     * do método.
      */
     @Nullable
     private LicaoAprendida saveInternal(LicaoAprendida entity) {
-        return licaoRepository.save(entity);
+        LicaoAprendida resultado = licaoRepository.save(Objects.requireNonNull(entity, "Erro"));
+        return Objects.requireNonNull(resultado, "A lição aprendida não pode ser nula após persistência");
     }
 }

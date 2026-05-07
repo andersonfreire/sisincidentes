@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,29 +28,35 @@ public class InteracaoServiceImpl implements InteracaoService {
     @Override
     @Transactional
     public InteracaoResponseDTO create(InteracaoRequestDTO dto) {
-        log.info("Registrando nova interação para o incidente ID: {}", dto.getIncidenteId());
+        Objects.requireNonNull(dto, "O DTO de interação não pode ser nulo");
+        Long incidenteId = Objects.requireNonNull(dto.getIncidenteId(), "O ID do incidente não pode ser nulo");
 
-        Incidente incidente = incidenteRepository.findById(dto.getIncidenteId())
-                .orElseThrow(() -> new ResourceNotFoundException("Incidente", "id", dto.getIncidenteId()));
+        log.info("Registrando nova interação para o incidente ID: {}", incidenteId);
+
+        Incidente incidente = incidenteRepository.findById(incidenteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Incidente", "id", incidenteId));
 
         Interacao interacao = Interacao.builder()
                 .texto(dto.getTexto())
                 .incidente(incidente)
                 .build();
 
-        return toResponseDTO(interacaoRepository.save(interacao));
+        Interacao persistida = interacaoRepository.save(Objects.requireNonNull(interacao, "Erro"));
+        Interacao saved = Objects.requireNonNull(persistida, "Erro ao persistir a interação");
+        return toResponseDTO(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<InteracaoResponseDTO> findByIncidenteId(Long incidenteId) {
-        log.debug("Buscando histórico de interações do incidente ID: {}", incidenteId);
-        
-        if (!incidenteRepository.existsById(incidenteId)) {
-            throw new ResourceNotFoundException("Incidente", "id", incidenteId);
+        Long idValido = Objects.requireNonNull(incidenteId, "O ID do incidente não pode ser nulo");
+        log.debug("Buscando histórico de interações do incidente ID: {}", idValido);
+
+        if (!incidenteRepository.existsById(idValido)) {
+            throw new ResourceNotFoundException("Incidente", "id", idValido);
         }
 
-        return interacaoRepository.findByIncidenteIdOrderByDataCriacaoDesc(incidenteId)
+        return interacaoRepository.findByIncidenteIdOrderByDataCriacaoDesc(idValido)
                 .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -58,11 +65,13 @@ public class InteracaoServiceImpl implements InteracaoService {
     @Override
     @Transactional
     public void delete(Long id) {
-        log.info("Excluindo interação ID: {}", id);
-        if (!interacaoRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Interação", "id", id);
+        Long idValido = Objects.requireNonNull(id, "O ID da interação não pode ser nulo");
+        log.info("Excluindo interação ID: {}", idValido);
+
+        if (!interacaoRepository.existsById(idValido)) {
+            throw new ResourceNotFoundException("Interação", "id", idValido);
         }
-        interacaoRepository.deleteById(id);
+        interacaoRepository.deleteById(idValido);
     }
 
     private InteracaoResponseDTO toResponseDTO(Interacao entity) {

@@ -37,8 +37,9 @@ public class OpenApiConfig {
                                                                 "- **RF03** — Autenticação e Autorização (JWT) ✅\n\n" +
                                                                 "- **RF04** — Restrição de Alteração de Dados Sensíveis ✅\n\n"
                                                                 +
+                                                                "- **RF05** — Gerenciamento de Categorias ✅\n\n"
+                                                                +
                                                                 "### Recursos em desenvolvimento:\n" +
-                                                                "- RF05 — Gerenciamento de Categorias\n" +
                                                                 "- RF06 — Gerenciamento de Incidentes e Vulnerabilidades\n"
                                                                 +
                                                                 "- RF07 — Emissão de Relatórios\n" +

@@ -1,73 +1,79 @@
 package com.seguranca.sisincidentes.config;
 
+import com.seguranca.sisincidentes.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Configuração do Spring Security para a fase atual do desenvolvimento.
- *
- * <p>Nesta etapa (RF01), a API opera sem autenticação JWT para que a integração
- * entre o front-end React e o back-end possa ser validada. A autenticação
- * será implementada em um RF específico.</p>
- *
- * <ul>
- *   <li>CSRF desabilitado (padrão para APIs REST stateless)</li>
- *   <li>Sessões stateless (sem HttpSession no servidor)</li>
- *   <li>Headers de frame habilitados para o H2 Console funcionar no browser</li>
- *   <li>Todos os endpoints públicos nesta fase</li>
- * </ul>
+ * Configuração central de segurança do Spring Security.
+ * Define filtros, permissões de rotas e política de sessão.
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Permite o uso de @PreAuthorize nos Controllers
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    /** Endpoints públicos (sem autenticação) nesta fase do desenvolvimento. */
-    private static final String[] PUBLIC_ENDPOINTS = {
-        "/api/**",
-        "/h2-console/**",
-        "/swagger-ui/**",
-        "/swagger-ui.html",
-        "/v3/api-docs/**",
-        "/actuator/**"
-    };
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final UserDetailsService userDetailsService;
+
+    @Bean
+    public org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder() {
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Desabilita CSRF (APIs REST stateless não usam cookies de sessão)
-            .csrf(AbstractHttpConfigurer::disable)
-
-            // Política de sessão: STATELESS (sem HttpSession)
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .csrf(AbstractHttpConfigurer::disable) // Desabilita CSRF (usaremos JWT)
+            .cors(cors -> {}) // Usa as configurações do CorsConfig
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
+            .authorizeHttpRequests(auth -> auth
+                // Rotas Públicas
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/h2-console/**").permitAll()
+                
+                // Rotas Protegidas por Role (Exemplo)
+                .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/unidades/**").hasRole("ADMIN")
+                
+                // Qualquer outra requisição deve ser autenticada
+                .anyRequest().authenticated()
             )
-
-            // Autorização de rotas
-            .authorizeHttpRequests(auth ->
-                auth.requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                    .anyRequest().authenticated()
-            )
-
-            // Permite frames do mesmo domínio (necessário para o H2 Console)
-            .headers(headers ->
-                headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-            );
+            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)) // Necessário para o H2 Console
+            .authenticationProvider(authenticationProvider(passwordEncoder()))
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    /**
-     * Bean para realizar o hash de senhas utilizando o algoritmo BCrypt.
-     * Utilizado para codificar a senha no momento do cadastro do usuário.
-     */
     @Bean
-    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
-        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    public AuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 }

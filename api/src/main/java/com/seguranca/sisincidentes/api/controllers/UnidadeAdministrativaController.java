@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Controller REST para o gerenciamento de Unidades Administrativas.
@@ -60,7 +61,7 @@ public class UnidadeAdministrativaController {
             @Valid @RequestBody UnidadeAdministrativaRequestDTO requestDTO) {
 
         log.info("POST /api/unidades — Criando unidade: {}", requestDTO.getCodigo());
-        UnidadeAdministrativaResponseDTO response = service.create(requestDTO);
+        UnidadeAdministrativaResponseDTO response = service.create(Objects.requireNonNull(requestDTO));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -101,7 +102,7 @@ public class UnidadeAdministrativaController {
             @PathVariable Long id) {
 
         log.debug("GET /api/unidades/{} — Buscando por ID.", id);
-        return ResponseEntity.ok(service.findById(id));
+        return ResponseEntity.ok(service.findById(Objects.requireNonNull(id)));
     }
 
     // =========================================================
@@ -163,7 +164,7 @@ public class UnidadeAdministrativaController {
             @Valid @RequestBody UnidadeAdministrativaRequestDTO requestDTO) {
 
         log.info("PUT /api/unidades/{} — Atualizando unidade.", id);
-        return ResponseEntity.ok(service.update(id, requestDTO));
+        return ResponseEntity.ok(service.update(Objects.requireNonNull(id), Objects.requireNonNull(requestDTO)));
     }
 
     // =========================================================
@@ -185,7 +186,7 @@ public class UnidadeAdministrativaController {
             @PathVariable Long id) {
 
         log.info("DELETE /api/unidades/{} — Excluindo unidade.", id);
-        service.delete(id);
+        service.delete(Objects.requireNonNull(id));
         return ResponseEntity.noContent().build();
     }
 }

@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Controller REST para o gerenciamento de Usuários.
@@ -60,7 +61,7 @@ public class UsuarioController {
             @Valid @RequestBody UsuarioRequestDTO requestDTO) {
 
         log.info("POST /api/usuarios — Criando usuário: {}", requestDTO.getEmail());
-        UsuarioResponseDTO response = service.create(requestDTO);
+        UsuarioResponseDTO response = service.create(Objects.requireNonNull(requestDTO));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -101,7 +102,7 @@ public class UsuarioController {
             @PathVariable Long id) {
 
         log.debug("GET /api/usuarios/{} — Buscando por ID.", id);
-        return ResponseEntity.ok(service.findById(id));
+        return ResponseEntity.ok(service.findById(Objects.requireNonNull(id)));
     }
 
     // =========================================================
@@ -141,7 +142,7 @@ public class UsuarioController {
             @PathVariable Long unidadeId) {
 
         log.debug("GET /api/usuarios/unidade/{} — Filtrando por unidade.", unidadeId);
-        return ResponseEntity.ok(service.findByUnidade(unidadeId));
+        return ResponseEntity.ok(service.findByUnidade(Objects.requireNonNull(unidadeId)));
     }
 
     // =========================================================
@@ -169,7 +170,7 @@ public class UsuarioController {
             @Valid @RequestBody UsuarioRequestDTO requestDTO) {
 
         log.info("PUT /api/usuarios/{} — Atualizando usuário.", id);
-        return ResponseEntity.ok(service.update(id, requestDTO));
+        return ResponseEntity.ok(service.update(Objects.requireNonNull(id), Objects.requireNonNull(requestDTO)));
     }
 
     // =========================================================
@@ -192,7 +193,7 @@ public class UsuarioController {
             @PathVariable Long id) {
 
         log.info("PATCH /api/usuarios/{}/toggle-ativo — Alternando status.", id);
-        return ResponseEntity.ok(service.toggleAtivo(id));
+        return ResponseEntity.ok(service.toggleAtivo(Objects.requireNonNull(id)));
     }
 
     // =========================================================
@@ -214,7 +215,7 @@ public class UsuarioController {
             @PathVariable Long id) {
 
         log.info("DELETE /api/usuarios/{} — Excluindo usuário.", id);
-        service.delete(id);
+        service.delete(Objects.requireNonNull(id));
         return ResponseEntity.noContent().build();
     }
 }

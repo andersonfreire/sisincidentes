@@ -2,50 +2,39 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./Login.css";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebaseConfig";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
+    
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
     const [erro, setErro] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setErro("");
+        setLoading(true);
 
-        try {
-            await signInWithEmailAndPassword(auth, email, senha);
+        const result = await login(email, senha);
+
+        if (result.success) {
             navigate("/");
-        } catch (error) {
-            switch (error.code) {
-                case "auth/invalid-email":
-                    setErro("O formato do e-mail é inválido.");
-                    break;
-                case "auth/user-disabled":
-                    setErro("Este usuário foi desabilitado.");
-                    break;
-                case "auth/user-not-found":
-                case "auth/wrong-password":
-                case "auth/invalid-credential":
-                    setErro("Email ou senha inválidos. Tente novamente.");
-                    break;
-                default:
-                    setErro("Erro ao efetuar login. Verifique suas credenciais.");
-                    break;
-            }
+        } else {
+            setErro(result.error || "Falha na autenticação. Verifique suas credenciais.");
+            setLoading(false);
         }
     };
 
     return (
         <div className="d-flex flex-column login-page">
-            {/* Formulário centralizado */}
             <div className="login-container">
                 <div className="card login-card shadow-sm border-0 p-4">
                     <div className="text-center mb-4 login-title">
-                        <h3 className="fw-bold text-primary">Login</h3>
-                        <p className="text-muted mb-0">Acesse o SisIncidentes</p>
+                        <h3 className="fw-bold text-primary">SisIncidentes</h3>
+                        <p className="text-muted mb-0">Acesse sua conta</p>
                     </div>
 
                     <form onSubmit={handleLogin}>
@@ -59,6 +48,7 @@ const Login = () => {
                                 className="form-control"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                placeholder="exemplo@orgao.gov.br"
                                 required
                             />
                         </div>
@@ -73,6 +63,7 @@ const Login = () => {
                                 className="form-control"
                                 value={senha}
                                 onChange={(e) => setSenha(e.target.value)}
+                                placeholder="Sua senha"
                                 required
                             />
                         </div>
@@ -83,20 +74,23 @@ const Login = () => {
                             </div>
                         )}
 
-                        <button type="submit" className="btn btn-primary w-100">
-                            Entrar
+                        <button 
+                            type="submit" 
+                            className="btn btn-primary w-100"
+                            disabled={loading}
+                        >
+                            {loading ? "Autenticando..." : "Entrar"}
                         </button>
                     </form>
 
                     <div className="text-center mt-3">
                         <small className="text-muted">
-                        Ainda não tem conta? <a href="#">Cadastre-se</a>
+                        SisIncidentes — Sistema de Segurança
                         </small>
                     </div>
                 </div>
             </div>
 
-            {/* Rodapé */}
             <footer className="login-footer">
                 <small>© {new Date().getFullYear()} SisIncidentes</small>
             </footer>

@@ -2,6 +2,7 @@ package com.seguranca.sisincidentes.service;
 
 import com.seguranca.sisincidentes.api.dto.UsuarioRequestDTO;
 import com.seguranca.sisincidentes.api.dto.UsuarioResponseDTO;
+import org.springframework.lang.NonNull;
 
 import java.util.List;
 
@@ -26,7 +27,7 @@ public interface UsuarioService {
      * @throws com.seguranca.sisincidentes.api.exception.ResourceNotFoundException
      *         se a {@code unidadeId} não existir
      */
-    UsuarioResponseDTO create(UsuarioRequestDTO requestDTO);
+    UsuarioResponseDTO create(@NonNull UsuarioRequestDTO requestDTO);
 
     /**
      * Atualiza os dados de um Usuário existente.
@@ -41,7 +42,7 @@ public interface UsuarioService {
      *         se o ID não existir
      * @throws IllegalArgumentException se o e-mail já estiver em uso por outro usuário
      */
-    UsuarioResponseDTO update(Long id, UsuarioRequestDTO requestDTO);
+    UsuarioResponseDTO update(@NonNull Long id, @NonNull UsuarioRequestDTO requestDTO);
 
     /**
      * Lista todos os Usuários cadastrados, ordenados por nome.
@@ -58,7 +59,7 @@ public interface UsuarioService {
      * @throws com.seguranca.sisincidentes.api.exception.ResourceNotFoundException
      *         se o ID não existir
      */
-    UsuarioResponseDTO findById(Long id);
+    UsuarioResponseDTO findById(@NonNull Long id);
 
     /**
      * Busca Usuários cujo nome contenha o termo informado (parcial, case-insensitive).
@@ -74,7 +75,7 @@ public interface UsuarioService {
      * @param unidadeId ID da unidade administrativa
      * @return lista de usuários pertencentes à unidade
      */
-    List<UsuarioResponseDTO> findByUnidade(Long unidadeId);
+    List<UsuarioResponseDTO> findByUnidade(@NonNull Long unidadeId);
 
     /**
      * Exclui permanentemente um Usuário pelo seu identificador.
@@ -83,7 +84,7 @@ public interface UsuarioService {
      * @throws com.seguranca.sisincidentes.api.exception.ResourceNotFoundException
      *         se o ID não existir
      */
-    void delete(Long id);
+    void delete(@NonNull Long id);
 
     /**
      * Alterna o status ativo/inativo de um Usuário.
@@ -96,5 +97,5 @@ public interface UsuarioService {
      * @throws com.seguranca.sisincidentes.api.exception.ResourceNotFoundException
      *         se o ID não existir
      */
-    UsuarioResponseDTO toggleAtivo(Long id);
+    UsuarioResponseDTO toggleAtivo(@NonNull Long id);
 }

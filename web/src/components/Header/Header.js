@@ -2,21 +2,15 @@ import React from "react";
 import "./Header.css";
 import { Dropdown, Image } from "react-bootstrap";
 import { FaUserCircle, FaSignOutAlt } from "react-icons/fa";
-import { signOut } from "firebase/auth";
-import { auth } from "../../firebaseConfig";
 import { useAuth } from "../../context/AuthContext";
 import LogoUfrn from "../../assets/logo-UFRN.png";
 import { NavLink } from "react-router-dom";
 
 const Header = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-    }
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -42,7 +36,7 @@ const Header = () => {
               className="d-flex align-items-center"
             >
               <FaUserCircle className="me-2 fs-5" />
-              <span>{user.email}</span>
+              <span>{user.nome || user.email}</span>
             </Dropdown.Toggle>
 
                <Dropdown.Menu className="shadow-sm">

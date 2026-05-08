@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button, Table, Spinner } from "react-bootstrap";
-import { deleteCategory, getCategories } from "../../services/categoryService";
+import { deleteCategory, getCategories } from "../../services/categoriaService";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 
 const CategoriaList = ({ onEdit }) => {

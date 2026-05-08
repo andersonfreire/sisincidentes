@@ -2,7 +2,6 @@ package com.seguranca.sisincidentes.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,7 +35,48 @@ public class IncidenteRequestDTO {
     @Schema(description = "Status atual do incidente", example = "ABERTO", allowableValues = {"ABERTO", "EM_ANALISE", "RESOLVIDO", "FECHADO"})
     private String status;
 
-    @NotEmpty(message = "Um incidente deve estar vinculado a pelo menos uma vulnerabilidade.")
-    @Schema(description = "Lista de IDs das vulnerabilidades associadas ao incidente", example = "[1, 2]", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Número do chamado relacionado")
+    private String numeroChamado;
+
+    @Schema(description = "Tarefa relacionada no sistema de gestão")
+    private String tarefaRelacionada;
+
+    @Schema(description = "Tipo da ocorrência", example = "Incidente")
+    private String tipo;
+
+    @Schema(description = "Prioridade do incidente", example = "Alta")
+    private String prioridade;
+
+    @Schema(description = "IP de origem da ocorrência")
+    private String ipOrigem;
+
+    @Schema(description = "IP de destino da ocorrência")
+    private String ipDestino;
+
+    @Schema(description = "Host afetado")
+    private String host;
+
+    @Schema(description = "Tempo estimado para resolução")
+    private String tempoEstimado;
+
+    @Schema(description = "Emails em cópia (CC)")
+    private String cc;
+
+    @Schema(description = "Notas adicionais")
+    private String notas;
+
+    @Schema(description = "ID da categoria associada")
+    private Long categoriaId;
+
+    @Schema(description = "ID da unidade administrativa associada")
+    private Long unidadeId;
+
+    @Schema(description = "ID do autor do registro")
+    private Long autorId;
+
+    @Schema(description = "ID do usuário atribuído")
+    private Long atribuidoId;
+
+    @Schema(description = "Lista de IDs das vulnerabilidades associadas ao incidente", example = "[1, 2]", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private List<Long> vulnerabilidadesIds;
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button } from "react-bootstrap";
 import { createLicao, updateLicao } from "../../services/licaoService";
-import { getIncidentes } from "../../services/incidentService";
+import { getIncidentes } from "../../services/incidenteService";
 import ToastMessage from "../../components/ToastMessage/ToastMessage";
 import { getUsuarios } from "../../services/usuarioService";
 

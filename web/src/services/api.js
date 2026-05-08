@@ -12,7 +12,7 @@ export const request = async (endpoint, options = {}) => {
         ...options.headers,
     };
 
-    if (token) {
+    if (token && token !== "null" && token !== "undefined") {
         headers["Authorization"] = `Bearer ${token}`;
     }
 

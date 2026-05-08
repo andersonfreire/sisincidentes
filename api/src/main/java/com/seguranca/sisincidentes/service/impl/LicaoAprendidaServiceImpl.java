@@ -22,15 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementação concreta do serviço de Lições Aprendidas.
- *
- * <p>
- * Concentra a lógica de negócio para documentação post-mortem:
- * </p>
- * <ul>
- * <li>Validação de unicidade para relacionamento 1:1 com Incidentes.</li>
- * <li>Mapeamento manual entre Entidade e DTO via Builder.</li>
- * <li>Persistência transacional dos dados.</li>
- * </ul>
  */
 @Slf4j
 @Service
@@ -53,16 +44,12 @@ public class LicaoAprendidaServiceImpl implements LicaoAprendidaService {
         Incidente incidente = incidenteRepository.findById(incidenteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Incidente", "id", incidenteId));
 
-        // Valida restrição de integridade 1:1
         licaoRepository.findByIncidenteId(incidenteId).ifPresent(l -> {
             throw new IllegalArgumentException(
                     String.format("O incidente ID %d já possui uma lição aprendida registrada.", incidenteId));
         });
 
         LicaoAprendida entity = toEntity(requestDTO, incidente);
-
-        // Chamada via método auxiliar para conformidade com @Nullable e segurança de
-        // tipos
         LicaoAprendida saved = Objects.requireNonNull(saveInternal(entity), "Erro ao persistir a lição aprendida");
 
         log.info("Lição aprendida registrada com sucesso. ID: {}", saved.getId());
@@ -70,12 +57,43 @@ public class LicaoAprendidaServiceImpl implements LicaoAprendidaService {
     }
 
     @Override
+    @Transactional
+    public LicaoAprendidaResponseDTO update(Long id, LicaoAprendidaRequestDTO requestDTO) {
+        Objects.requireNonNull(id, "O ID da lição aprendida não pode ser nulo para atualização.");
+        Objects.requireNonNull(requestDTO, "Os dados para atualização não podem ser nulos.");
+        log.info("Atualizando lição aprendida ID: {}", id);
+
+        LicaoAprendida existing = licaoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_NAME, "id", id));
+
+        if (!existing.getIncidente().getId().equals(requestDTO.getIncidenteId())) {
+            Long novoIncidenteId = Objects.requireNonNull(requestDTO.getIncidenteId(), "O ID do novo incidente não pode ser nulo.");
+            
+            Incidente novoIncidente = incidenteRepository.findById(novoIncidenteId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Incidente", "id", novoIncidenteId));
+            
+            licaoRepository.findByIncidenteId(novoIncidenteId).ifPresent(l -> {
+                throw new IllegalArgumentException(
+                        String.format("O incidente ID %d já possui uma lição aprendida registrada.", novoIncidenteId));
+            });
+            existing.setIncidente(novoIncidente);
+        }
+
+        existing.setDescricaoResolucao(requestDTO.getDescricaoResolucao());
+        LicaoAprendida updated = Objects.requireNonNull(saveInternal(existing));
+
+        log.info("Lição aprendida ID {} atualizada com sucesso.", id);
+        return toResponseDTO(updated);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public LicaoAprendidaResponseDTO findByIncidenteId(Long incidenteId) {
-        log.debug("Buscando lição aprendida vinculada ao incidente ID: {}", incidenteId);
-        return licaoRepository.findByIncidenteId(incidenteId)
+        Long idValido = Objects.requireNonNull(incidenteId, "O ID do incidente não pode ser nulo.");
+        log.debug("Buscando lição aprendida vinculada ao incidente ID: {}", idValido);
+        return licaoRepository.findByIncidenteId(idValido)
                 .map(this::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_NAME, "incidenteId", incidenteId));
+                .orElseThrow(() -> new ResourceNotFoundException(RESOURCE_NAME, "incidenteId", idValido));
     }
 
     @Override
@@ -91,19 +109,13 @@ public class LicaoAprendidaServiceImpl implements LicaoAprendidaService {
     @Override
     @Transactional
     public void delete(Long id) {
-        // Linhas 88 e 91: Validação defensiva imediata para informar ao compilador
         Long idValido = Objects.requireNonNull(id, "O ID da lição aprendida não pode ser nulo");
-
         log.info("Excluindo lição aprendida ID: {}", idValido);
         if (!licaoRepository.existsById(idValido)) {
             throw new ResourceNotFoundException(RESOURCE_NAME, "id", idValido);
         }
         licaoRepository.deleteById(idValido);
     }
-
-    // =========================================================
-    // Mapeamentos e Helpers
-    // =========================================================
 
     private LicaoAprendida toEntity(LicaoAprendidaRequestDTO dto, Incidente incidente) {
         return LicaoAprendida.builder()
@@ -122,14 +134,8 @@ public class LicaoAprendidaServiceImpl implements LicaoAprendidaService {
                 .build();
     }
 
-    /**
-     * Método auxiliar para conformidade de nulidade.
-     * Encapsula o retorno do repositório permitindo o uso de @Nullable no contrato
-     * do método.
-     */
     @Nullable
     private LicaoAprendida saveInternal(LicaoAprendida entity) {
-        LicaoAprendida resultado = licaoRepository.save(Objects.requireNonNull(entity, "Erro"));
-        return Objects.requireNonNull(resultado, "A lição aprendida não pode ser nula após persistência");
+        return licaoRepository.save(Objects.requireNonNull(entity, "Entidade não pode ser nula"));
     }
 }

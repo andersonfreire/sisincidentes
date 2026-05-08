@@ -44,6 +44,15 @@ public interface LicaoAprendidaService {
     List<LicaoAprendidaResponseDTO> findAll();
 
     /**
+     * Atualiza uma Lição Aprendida existente.
+     *
+     * @param id identificador da lição aprendida.
+     * @param requestDTO novos dados da resolução.
+     * @return DTO com os dados atualizados.
+     */
+    LicaoAprendidaResponseDTO update(Long id, LicaoAprendidaRequestDTO requestDTO);
+
+    /**
      * Remove permanentemente um registro de Lição Aprendida.
      *
      * @param id identificador da lição aprendida.

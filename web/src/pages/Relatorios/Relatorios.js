@@ -27,7 +27,7 @@ const Relatorios = () => {
                 endDate = now;
             } else {
                 const year = parseInt(period, 10);
-                startDate = new Date(.0, 1);
+                startDate = new Date(year, 0, 1);
                 endDate = new Date(year, 11, 31);
             }
 

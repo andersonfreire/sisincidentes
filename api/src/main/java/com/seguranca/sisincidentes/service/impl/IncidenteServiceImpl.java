@@ -5,11 +5,8 @@ import com.seguranca.sisincidentes.api.dto.IncidenteResponseDTO;
 import com.seguranca.sisincidentes.api.dto.VulnerabilidadeResponseDTO;
 import com.seguranca.sisincidentes.api.exception.ForbiddenOperationException;
 import com.seguranca.sisincidentes.api.exception.ResourceNotFoundException;
-import com.seguranca.sisincidentes.domain.model.Incidente;
-import com.seguranca.sisincidentes.domain.model.Perfil;
-import com.seguranca.sisincidentes.domain.model.Vulnerabilidade;
-import com.seguranca.sisincidentes.domain.repository.IncidenteRepository;
-import com.seguranca.sisincidentes.domain.repository.VulnerabilidadeRepository;
+import com.seguranca.sisincidentes.domain.model.*;
+import com.seguranca.sisincidentes.domain.repository.*;
 import com.seguranca.sisincidentes.security.UserDetailsImpl;
 import com.seguranca.sisincidentes.service.IncidenteService;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +41,9 @@ public class IncidenteServiceImpl implements IncidenteService {
 
     private final IncidenteRepository incidenteRepository;
     private final VulnerabilidadeRepository vulnerabilidadeRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final UnidadeAdministrativaRepository unidadeRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     @Transactional
@@ -78,6 +78,24 @@ public class IncidenteServiceImpl implements IncidenteService {
         existing.setDescricao(requestDTO.getDescricao());
         existing.setStatus(requestDTO.getStatus() != null ? requestDTO.getStatus() : existing.getStatus());
         existing.setVulnerabilidades(vulnerabilidades);
+
+        // Novos campos
+        existing.setNumeroChamado(requestDTO.getNumeroChamado());
+        existing.setTarefaRelacionada(requestDTO.getTarefaRelacionada());
+        existing.setTipo(requestDTO.getTipo());
+        existing.setPrioridade(requestDTO.getPrioridade());
+        existing.setIpOrigem(requestDTO.getIpOrigem());
+        existing.setIpDestino(requestDTO.getIpDestino());
+        existing.setHost(requestDTO.getHost());
+        existing.setTempoEstimado(requestDTO.getTempoEstimado());
+        existing.setCc(requestDTO.getCc());
+        existing.setNotas(requestDTO.getNotas());
+
+        // Resolução de relacionamentos
+        java.util.Optional.ofNullable(requestDTO.getCategoriaId()).flatMap(categoriaRepository::findById).ifPresent(existing::setCategoria);
+        java.util.Optional.ofNullable(requestDTO.getUnidadeId()).flatMap(unidadeRepository::findById).ifPresent(existing::setUnidade);
+        java.util.Optional.ofNullable(requestDTO.getAutorId()).flatMap(usuarioRepository::findById).ifPresent(existing::setAutor);
+        java.util.Optional.ofNullable(requestDTO.getAtribuidoId()).flatMap(usuarioRepository::findById).ifPresent(existing::setAtribuido);
 
         Incidente updated = saveAndValidate(existing);
         log.info("Incidente ID {} atualizado com sucesso.", id);
@@ -169,6 +187,20 @@ public class IncidenteServiceImpl implements IncidenteService {
                 .titulo(dto.getTitulo())
                 .descricao(dto.getDescricao())
                 .status(dto.getStatus())
+                .numeroChamado(dto.getNumeroChamado())
+                .tarefaRelacionada(dto.getTarefaRelacionada())
+                .tipo(dto.getTipo())
+                .prioridade(dto.getPrioridade())
+                .ipOrigem(dto.getIpOrigem())
+                .ipDestino(dto.getIpDestino())
+                .host(dto.getHost())
+                .tempoEstimado(dto.getTempoEstimado())
+                .cc(dto.getCc())
+                .notas(dto.getNotas())
+                .categoria(java.util.Optional.ofNullable(dto.getCategoriaId()).flatMap(categoriaRepository::findById).orElse(null))
+                .unidade(java.util.Optional.ofNullable(dto.getUnidadeId()).flatMap(unidadeRepository::findById).orElse(null))
+                .autor(java.util.Optional.ofNullable(dto.getAutorId()).flatMap(usuarioRepository::findById).orElse(null))
+                .atribuido(java.util.Optional.ofNullable(dto.getAtribuidoId()).flatMap(usuarioRepository::findById).orElse(null))
                 .vulnerabilidades(vulnerabilidades)
                 .build();
     }
@@ -179,6 +211,24 @@ public class IncidenteServiceImpl implements IncidenteService {
                 .titulo(entity.getTitulo())
                 .descricao(entity.getDescricao())
                 .status(entity.getStatus())
+                .numeroChamado(entity.getNumeroChamado())
+                .tarefaRelacionada(entity.getTarefaRelacionada())
+                .tipo(entity.getTipo())
+                .prioridade(entity.getPrioridade())
+                .ipOrigem(entity.getIpOrigem())
+                .ipDestino(entity.getIpDestino())
+                .host(entity.getHost())
+                .tempoEstimado(entity.getTempoEstimado())
+                .cc(entity.getCc())
+                .notas(entity.getNotas())
+                .categoriaId(entity.getCategoria() != null ? entity.getCategoria().getId() : null)
+                .categoriaNome(entity.getCategoria() != null ? entity.getCategoria().getNome() : null)
+                .unidadeId(entity.getUnidade() != null ? entity.getUnidade().getId() : null)
+                .unidadeSigla(entity.getUnidade() != null ? entity.getUnidade().getSigla() : null)
+                .autorId(entity.getAutor() != null ? entity.getAutor().getId() : null)
+                .autorNome(entity.getAutor() != null ? entity.getAutor().getNome() : null)
+                .atribuidoId(entity.getAtribuido() != null ? entity.getAtribuido().getId() : null)
+                .atribuidoNome(entity.getAtribuido() != null ? entity.getAtribuido().getNome() : null)
                 .dataRegistro(entity.getDataRegistro())
                 .vulnerabilidades(entity.getVulnerabilidades().stream()
                         .map(v -> VulnerabilidadeResponseDTO.builder()

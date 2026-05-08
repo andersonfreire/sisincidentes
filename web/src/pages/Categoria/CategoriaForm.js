@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button, Form } from "react-bootstrap";
-import { createCategory, updateCategory } from "../../services/categoryService";
+import { createCategory, updateCategory } from "../../services/categoriaService";
 import { initialCategoriaModel } from "../../models/categoriaModel";
 import ToastMessage from "../../components/ToastMessage/ToastMessage";
 

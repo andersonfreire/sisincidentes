@@ -1,4 +1,4 @@
-package com.seguranca.sisincidentes.api.controller;
+package com.seguranca.sisincidentes.api.controllers;
 
 import com.seguranca.sisincidentes.api.dto.CategoriaRequestDTO;
 import com.seguranca.sisincidentes.api.dto.CategoriaResponseDTO;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Objects;
 
 @RestController
-@RequestMapping("/api/v1/categorias")
+@RequestMapping("/api/categorias")
 @RequiredArgsConstructor
 @Tag(name = "Categorias", description = "Gerenciamento de categorias de incidentes e vulnerabilidades (RF05)")
 public class CategoriaController {

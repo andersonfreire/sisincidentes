@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Button, Form, Row, Col } from "react-bootstrap";
 import { initialIncidenteVulnerabilidade } from "../../models/incidenteVulnerabilidadeModel";
-import { getCategories } from "../../services/categoryService";
-import { createIncidente, updateIncidente } from "../../services/incidentService";
+import { getCategories } from "../../services/categoriaService";
+import { createIncidente, updateIncidente } from "../../services/incidenteService";
 import { getUsuarios } from "../../services/usuarioService";
 import { getUnidades } from "../../services/unidadeAdministrativaService";
 import ToastMessage from "../../components/ToastMessage/ToastMessage";

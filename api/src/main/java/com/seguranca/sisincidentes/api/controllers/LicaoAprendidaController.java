@@ -81,6 +81,33 @@ public class LicaoAprendidaController {
     }
 
     // =========================================================
+    //  PUT /api/licoes-aprendidas/{id} — Atualizar
+    // =========================================================
+
+    @Operation(
+        summary = "Atualizar Lição Aprendida",
+        description = "Atualiza os dados de uma lição aprendida existente."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lição aprendida atualizada com sucesso",
+            content = @Content(schema = @Schema(implementation = LicaoAprendidaResponseDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos",
+            content = @Content(schema = @Schema(implementation = ApiError.class))),
+        @ApiResponse(responseCode = "404", description = "Registro não encontrado",
+            content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<LicaoAprendidaResponseDTO> update(
+            @Parameter(description = "ID da Lição Aprendida", required = true, example = "1")
+            @PathVariable Long id,
+            @Valid @RequestBody LicaoAprendidaRequestDTO requestDTO) {
+
+        log.info("PUT /api/licoes-aprendidas/{} — Atualizando registro.", id);
+        LicaoAprendidaResponseDTO response = service.update(id, requestDTO);
+        return ResponseEntity.ok(response);
+    }
+
+    // =========================================================
     //  GET /api/licoes-aprendidas/incidente/{id} — Buscar por Incidente
     // =========================================================
 

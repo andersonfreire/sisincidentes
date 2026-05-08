@@ -15,7 +15,7 @@ const Home = () => {
     const fetchUser = async () => {
       try {
         if (user) {
-          const data = await getUsuarioById(user?.uid)
+          const data = await getUsuarioById(user?.id)
           setUsuario(data)
         }
       } catch (error) {

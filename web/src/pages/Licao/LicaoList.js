@@ -3,7 +3,7 @@ import { Table, Button, Spinner } from "react-bootstrap";
 import { getLicoes, deleteLicao } from "../../services/licaoService";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { getUsuarioById } from "../../services/usuarioService";
-import { getIncidenteById } from "../../services/incidentService";
+import { getIncidenteById } from "../../services/incidenteService";
 
 const LicaoList = ({ onEdit, refresh }) => {
   const [licoes, setLicoes] = useState([]);

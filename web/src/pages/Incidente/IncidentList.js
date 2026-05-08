@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Button, Accordion, Spinner } from "react-bootstrap";
-import { deleteIncidente, getIncidentes } from "../../services/incidentService";
+import { deleteIncidente, getIncidentes } from "../../services/incidenteService";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
-import { getCategoryById } from "../../services/categoryService";
+import { getCategoryById } from "../../services/categoriaService";
 import { getUnidadeById } from "../../services/unidadeAdministrativaService";
 import { getUsuarioById } from "../../services/usuarioService";
 

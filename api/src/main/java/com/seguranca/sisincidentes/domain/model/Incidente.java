@@ -107,4 +107,13 @@ public class Incidente {
     protected void onUpdate() {
         this.dataAtualizacao = LocalDateTime.now();
     }
+
+    // Para Lições Aprendidas (1:1)
+@OneToOne(mappedBy = "incidente", cascade = CascadeType.ALL, orphanRemoval = true)
+private LicaoAprendida licaoAprendida;
+
+// Para Interações (N:1)
+@OneToMany(mappedBy = "incidente", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<Interacao> interacoes;
+    
 }

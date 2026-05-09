@@ -34,18 +34,16 @@ public class OpenApiConfig {
                                                                 "- **RF01** — Gerenciamento de Unidades Administrativas ✅\n"
                                                                 +
                                                                 "- **RF02** — Gerenciamento de Usuários ✅\n" +
-                                                                "- **RF03** — Autenticação e Autorização (JWT) ✅\n\n" +
-                                                                "- **RF04** — Restrição de Alteração de Dados Sensíveis ✅\n\n"
+                                                                "- **RF03** — Autenticação e Autorização (JWT) ✅\n" +
+                                                                "- **RF04** — Restrição de Alteração de Dados Sensíveis ✅\n"
                                                                 +
-                                                                "- **RF05** — Gerenciamento de Categorias ✅\n\n"
+                                                                "- **RF05** — Gerenciamento de Categorias ✅\n" +
+                                                                "- **RF06** — Gerenciamento de Incidentes e Vulnerabilidades ✅\n"
                                                                 +
-                                                                "### Recursos em desenvolvimento:\n" +
-                                                                "- RF06 — Gerenciamento de Incidentes e Vulnerabilidades\n"
-                                                                +
-                                                                "- RF07 — Emissão de Relatórios\n" +
-                                                                "- RF08 — Gerenciamento de Lições Aprendidas\n" +
-                                                                "- RF09 — Consulta de Estatísticas Externas\n" +
-                                                                "- RF10 — Controle de Perfis e Permissões")
+                                                                "- **RF07** — Emissão de Relatórios ✅\n" +
+                                                                "- **RF08** — Gerenciamento de Lições Aprendidas ✅\n" +
+                                                                "- **RF09** — Consulta de Estatísticas Externas ✅\n" +
+                                                                "- **RF10** — Controle de Perfis e Permissões ✅")
                                                 .contact(new Contact()
                                                                 .name("Suporte TI")
                                                                 .email("suporte@sisincidentes.gov.br"))

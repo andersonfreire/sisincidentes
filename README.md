@@ -102,7 +102,9 @@ O sistema agora opera em uma estrutura de **Monorepo**, dividida em duas camadas
 2.  **Validações:**
     - Tente cadastrar uma unidade com o mesmo **código** de uma já existente; o sistema deve retornar um erro amigável de conflito (409).
     - Tente salvar campos vazios para verificar a validação de formulários.
-
+3. **Usuários de teste**
+- ADMINISTRADOR : admin@sisincidentes.gov.br (Senha: admin123)
+- OPERADOR : Operador: operador@sisincidentes.gov.br (Senha: operador123)
 ---
 
 ## 🛠️ Requisitos de Ambiente

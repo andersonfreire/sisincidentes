@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { getRelatoriosData } from "../../services/relatoriosService";
 import { Form, Row, Col, Card } from "react-bootstrap";
-import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import "./Relatorios.css";
 
 const Relatorios = () => {
@@ -31,127 +31,137 @@ const Relatorios = () => {
                 endDate = new Date(year, 11, 31);
             }
 
-            const { stats, categoryData, unitData } = await getRelatoriosData(startDate, endDate);
-            
-            setStats(stats);
-            setCategoryData(categoryData);
-            setUnitData(unitData);
+            const data = await getRelatoriosData(startDate, endDate);
+            setStats(data.stats);
+            setCategoryData(data.categoryData);
+            setUnitData(data.unitData);
         };
 
         fetchData();
     }, [period]);
 
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+    // Paleta de cores alinhada ao Craft Design
+    const COLORS = ['#212529', '#495057', '#adb5bd', '#dee2e6']; 
 
     return (
-        <div className="relatorios-container">
-            <h2>Relatórios</h2>
-            <Form.Group as={Row} className="mb-3">
-                <Form.Label column sm={2}>Período</Form.Label>
-                <Col sm={10}>
-                    <Form.Select value={period} onChange={(e) => setPeriod(e.target.value)}>
+        <div className="relatorios-container p-3">
+            <h2 className="mb-4">Relatórios Analíticos</h2>
+            
+            <Form.Group as={Row} className="mb-4 align-items-center">
+                <Form.Label column sm={2} className="fw-bold">Período de Análise</Form.Label>
+                <Col sm={4}>
+                    <Form.Select 
+                        className="rounded-0 shadow-none border-dark" 
+                        value={period} 
+                        onChange={(e) => setPeriod(e.target.value)}
+                    >
                         <option value="last12months">Últimos 12 meses</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
                         <option value="2024">2024</option>
-                        <option value="2023">2023</option>
                     </Form.Select>
                 </Col>
             </Form.Group>
-            <Row>
+
+            <Row className="g-3">
                 <Col md={4}>
-                    <Card>
+                    <Card className="rounded-0 shadow-none border-dark h-100">
                         <Card.Body>
-                            <Card.Title>Incidentes Abertos</Card.Title>
-                            <Card.Text className="kpi-number">{stats.openIncidents}</Card.Text>
+                            <Card.Title className="text-muted text-uppercase fs-6">Incidentes Abertos</Card.Title>
+                            <Card.Text className="display-4 fw-bold mb-0">{stats.openIncidents}</Card.Text>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={4}>
-                    <Card>
+                    <Card className="rounded-0 shadow-none border-dark h-100">
                         <Card.Body>
-                            <Card.Title>Vulnerabilidades Abertas</Card.Title>
-                            <Card.Text className="kpi-number">{stats.openVulnerabilities}</Card.Text>
+                            <Card.Title className="text-muted text-uppercase fs-6">Vulnerabilidades Abertas</Card.Title>
+                            <Card.Text className="display-4 fw-bold mb-0">{stats.openVulnerabilities}</Card.Text>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={4}>
-                    <Card>
+                    <Card className="rounded-0 shadow-none border-dark h-100">
                         <Card.Body>
-                            <Card.Title>Incidentes em Andamento</Card.Title>
-                            <Card.Text className="kpi-number">{stats.ongoingIncidents}</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-            <Row className="mt-3">
-                <Col md={4}>
-                    <Card>
-                        <Card.Body>
-                            <Card.Title>Vulnerabilidades em Andamento</Card.Title>
-                            <Card.Text className="kpi-number">{stats.ongoingVulnerabilities}</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4}>
-                    <Card>
-                        <Card.Body>
-                            <Card.Title>Incidentes Concluídos (Período)</Card.Title>
-                            <Card.Text className="kpi-number">{stats.completedIncidentsPercentage.toFixed(2)}%</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4}>
-                    <Card>
-                        <Card.Body>
-                            <Card.Title>Vulnerabilidades Concluídas (Período)</Card.Title>
-                            <Card.Text className="kpi-number">{stats.completedVulnerabilitiesPercentage.toFixed(2)}%</Card.Text>
+                            <Card.Title className="text-muted text-uppercase fs-6">Incidentes em Andamento</Card.Title>
+                            <Card.Text className="display-4 fw-bold mb-0">{stats.ongoingIncidents}</Card.Text>
                         </Card.Body>
                     </Card>
                 </Col>
             </Row>
 
-            <Row className="mt-4">
-                <Col md={6}>
-                    <Card>
+            <Row className="g-3 mt-1">
+                <Col md={4}>
+                    <Card className="rounded-0 shadow-none border-dark h-100">
                         <Card.Body>
-                            <Card.Title>Distribuição por Categoria</Card.Title>
-                            <PieChart width={400} height={400}>
-                                <Pie
-                                    data={categoryData}
-                                    cx={200}
-                                    cy={200}
-                                    labelLine={false}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    dataKey="Incidentes/Vulnerabilidades"
-                                    nameKey="name"
-                                    label
-                                >
-                                    {categoryData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                                <Legend />
-                            </PieChart>
+                            <Card.Title className="text-muted text-uppercase fs-6">Vulnerab. em Andamento</Card.Title>
+                            <Card.Text className="display-4 fw-bold mb-0">{stats.ongoingVulnerabilities}</Card.Text>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col md={4}>
+                    <Card className="rounded-0 shadow-none border-dark h-100">
+                        <Card.Body>
+                            <Card.Title className="text-muted text-uppercase fs-6">Taxa de Resolução (Incidentes)</Card.Title>
+                            <Card.Text className="display-4 fw-bold mb-0">{stats.completedIncidentsPercentage.toFixed(1)}%</Card.Text>
+                        </Card.Body>
+                    </Card>
+                </Col>
+                <Col md={4}>
+                    <Card className="rounded-0 shadow-none border-dark h-100">
+                        <Card.Body>
+                            <Card.Title className="text-muted text-uppercase fs-6">Taxa de Resolução (Vulnerab.)</Card.Title>
+                            <Card.Text className="display-4 fw-bold mb-0">{stats.completedVulnerabilitiesPercentage.toFixed(1)}%</Card.Text>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
+
+            <Row className="g-3 mt-3">
+                <Col md={6}>
+                    <Card className="rounded-0 shadow-none border-dark h-100">
+                        <Card.Body>
+                            <Card.Title className="text-muted text-uppercase fs-6 mb-4">Distribuição por Categoria</Card.Title>
+                            <div style={{ height: 350 }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={categoryData}
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={110}
+                                            fill="#212529"
+                                            dataKey="Incidentes/Vulnerabilidades"
+                                            nameKey="name"
+                                            label
+                                        >
+                                            {categoryData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip contentStyle={{ borderRadius: 0, borderColor: '#000', boxShadow: 'none' }} />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
                         </Card.Body>
                     </Card>
                 </Col>
                 <Col md={6}>
-                    <Card>
+                    <Card className="rounded-0 shadow-none border-dark h-100">
                         <Card.Body>
-                            <Card.Title>Distribuição por Unidade Administrativa</Card.Title>
-                            <BarChart
-                                width={400}
-                                height={400}
-                                data={unitData}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Bar dataKey="Incidentes/Vulnerabilidades" fill="#8884d8" />
-                            </BarChart>
+                            <Card.Title className="text-muted text-uppercase fs-6 mb-4">Distribuição por Unidade</Card.Title>
+                            <div style={{ height: 350 }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={unitData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#dee2e6" />
+                                        <XAxis dataKey="name" tick={{ fill: '#212529' }} axisLine={{ stroke: '#212529' }} />
+                                        <YAxis tick={{ fill: '#212529' }} axisLine={{ stroke: '#212529' }} />
+                                        <Tooltip contentStyle={{ borderRadius: 0, borderColor: '#000', boxShadow: 'none' }} cursor={{ fill: '#f8f9fa' }} />
+                                        <Bar dataKey="Incidentes/Vulnerabilidades" fill="#212529" radius={[0, 0, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
                         </Card.Body>
                     </Card>
                 </Col>

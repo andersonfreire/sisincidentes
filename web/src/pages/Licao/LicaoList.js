@@ -1,165 +1,91 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Spinner } from "react-bootstrap";
+import { Accordion, Button, Spinner } from "react-bootstrap";
 import { getLicoes, deleteLicao } from "../../services/licaoService";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
-import { getUsuarioById } from "../../services/usuarioService";
 import { getIncidenteById } from "../../services/incidenteService";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 
 const LicaoList = ({ onEdit, refresh }) => {
-  const [licoes, setLicoes] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [licaoSelecionada, setLicaoSelecionada] = useState(null);
+    const [licoes, setLicoes] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [licaoSelecionada, setLicaoSelecionada] = useState(null);
 
-  // Função para buscar e enriquecer as lições com nome do autor e número do incidente
-  const fetchLicoes = async () => {
-    setLoading(true);
-    try {
-      const data = await getLicoes();
-
-      // Enriquecer cada lição com dados relacionados
-      const licoesComDetalhes = await Promise.all(
-        data.map(async (licao) => {
-          const [autor, incidente] = await Promise.all([
-            licao.autor ? getUsuarioById(licao.autor) : null,
-            licao.id_incidente ? getIncidenteById(licao.id_incidente) : null,
-          ]);
-
-          return {
-            ...licao,
-            autorNome: autor?.nome || "—",
-            numeroChamado: incidente?.numeroChamado || "—",
-          };
-        })
-      );
-
-      setLicoes(licoesComDetalhes);
-    } catch (error) {
-      console.error("Erro ao buscar lições aprendidas:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLicoes();
-  }, [refresh]);
-
-  const handleDeleteClick = (licao) => {
-    setLicaoSelecionada(licao);
-    setShowModal(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    try {
-      await deleteLicao(licaoSelecionada.id);
-      setShowModal(false);
-      setLicaoSelecionada(null);
-      fetchLicoes();
-    } catch (error) {
-      console.error("Erro ao excluir lição:", error);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setShowModal(false);
-    setLicaoSelecionada(null);
-  };
-
-  if (loading) {
-    return (
-      <div className="text-center my-5">
-        <Spinner animation="border" role="status" />
-        <div>Carregando lições aprendidas...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="py-4">
-      <h4 className="mb-3">Lições Aprendidas Registradas</h4>
-
-      {licoes.length === 0 ? (
-        <p className="text-center text-muted">Nenhuma lição registrada.</p>
-      ) : (
-        <Table striped bordered hover responsive>
-          <thead>
-            <tr>
-              <th>Título</th>
-              <th>Autor</th>
-              <th>Incidente</th>
-              <th>Data de Registro</th>
-              <th>Anexo</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {licoes.map((licao) => (
-              <tr key={licao.id}>
-                <td>{licao.titulo || "—"}</td>
-                <td>{licao.autorNome}</td>
-                <td>{licao.numeroChamado}</td>
-                <td>{formatarData(licao.data_registro)}</td>
-                <td>
-                  {licao.anexos ? (
-                    <a
-                      href={licao.anexos}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Ver documento
-                    </a>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td>
-                  <Button
-                    variant="warning"
-                    size="sm"
-                    className="me-2"
-                    onClick={() => onEdit(licao)}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDeleteClick(licao)}
-                  >
-                    Excluir
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      )}
-
-      {/* Modal de confirmação */}
-      <ConfirmModal
-        show={showModal}
-        onHide={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
-        title="Confirmar exclusão"
-        message={
-          licaoSelecionada
-            ? `Deseja realmente excluir a lição "${licaoSelecionada.titulo}"?`
-            : "Deseja realmente excluir esta lição?"
+    const fetchLicoes = async () => {
+        setLoading(true);
+        try {
+            const data = await getLicoes();
+            const validData = Array.isArray(data) ? data : [];
+            
+            const enriquecido = await Promise.all(validData.map(async (licao) => {
+                const idInc = licao.incidenteId || (licao.incidente && licao.incidente.id);
+                let numeroChamado = licao.incidente ? licao.incidente.numeroChamado : "—";
+                
+                if (!licao.incidente && idInc) {
+                    try {
+                        const incData = await getIncidenteById(idInc);
+                        numeroChamado = incData.numeroChamado || incData.id;
+                    } catch (e) {
+                        numeroChamado = idInc;
+                    }
+                }
+                return { ...licao, numeroChamado };
+            }));
+            
+            setLicoes(enriquecido);
+        } catch (error) {
+            console.error("Erro na extração de dados:", error);
+        } finally {
+            setLoading(false);
         }
-      />
-    </div>
-  );
-};
+    };
 
-// Função utilitária para formatação de data
-const formatarData = (timestamp) => {
-  if (!timestamp) return "—";
-  const date =
-    timestamp.toDate?.() instanceof Date
-      ? timestamp.toDate()
-      : new Date(timestamp);
-  return date.toLocaleString("pt-BR");
+    useEffect(() => { fetchLicoes(); }, [refresh]);
+
+    const handleConfirmDelete = async () => {
+        if (licaoSelecionada) {
+            await deleteLicao(licaoSelecionada.id);
+            setShowModal(false);
+            setLicaoSelecionada(null);
+            fetchLicoes();
+        }
+    };
+
+    if (loading) return <div className="text-center p-4"><Spinner animation="border" variant="dark" /></div>;
+
+    return (
+        <div className="mt-3">
+            {licoes.length === 0 ? (
+                <p className="text-muted border border-dark p-3 bg-light rounded-0">Nenhum registo consolidado.</p>
+            ) : (
+                <Accordion className="border-0 gap-2 d-flex flex-column">
+                    {licoes.map(licao => (
+                        <Accordion.Item key={licao.id} eventKey={licao.id.toString()} className="border border-dark rounded-0 shadow-none bg-light">
+                            <Accordion.Header className="shadow-none">
+                                <strong>Lição #{licao.id} — Incidente Relacionado #{licao.numeroChamado}</strong>
+                            </Accordion.Header>
+                            <Accordion.Body className="bg-white border-top border-dark rounded-0">
+                                <p><strong>Descrição da Resolução:</strong></p>
+                                <p className="text-justify">{licao.descricaoResolucao}</p>
+                                
+                                <div className="d-flex justify-content-end mt-4">
+                                    <Button variant="outline-dark" size="sm" className="rounded-0 shadow-none me-2" onClick={() => onEdit(licao)}>Editar</Button>
+                                    <Button variant="dark" size="sm" className="rounded-0 shadow-none" onClick={() => { setLicaoSelecionada(licao); setShowModal(true); }}>Eliminar</Button>
+                                </div>
+                            </Accordion.Body>
+                        </Accordion.Item>
+                    ))}
+                </Accordion>
+            )}
+
+            <ConfirmModal
+                show={showModal}
+                onHide={() => setShowModal(false)}
+                onConfirm={handleConfirmDelete}
+                title="Confirmação de Exclusão"
+                message="Proceder com a eliminação do registo de lição aprendida?"
+            />
+        </div>
+    );
 };
 
 export default LicaoList;

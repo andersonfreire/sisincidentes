@@ -3,203 +3,107 @@ import { Form, Button } from "react-bootstrap";
 import { createLicao, updateLicao } from "../../services/licaoService";
 import { getIncidentes } from "../../services/incidenteService";
 import ToastMessage from "../../components/ToastMessage/ToastMessage";
-import { getUsuarios } from "../../services/usuarioService";
 
 const LicaoForm = ({ selectedLesson, onSave }) => {
-    const [formData, setFormData] = useState({
-        titulo: "",
-        descricao: "",
-        autor: "",
-        id_incidente: "",
-        anexos: "",
-    });
-
+    const [formData, setFormData] = useState({ incidenteId: "", descricaoResolucao: "" });
     const [incidentes, setIncidentes] = useState([]);
-    const [usuarios, setUsuarios] = useState([])
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState({ show: false, message: "", variant: "success" });
 
-    const showToast = (message, variant = "success") => {
-        setToast({ show: true, message, variant });
-    };
-
-    const hideToast = () => setToast({ ...toast, show: false });
-
-    // Buscar incidentes
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchIncidentes = async () => {
             try {
-                const [incs, users] = await Promise.all([
-                    getIncidentes(),
-                    getUsuarios(),
-                ]);
-                setIncidentes(incs);
-                setUsuarios(users);
-
+                const data = await getIncidentes();
+                setIncidentes(Array.isArray(data) ? data : []);
             } catch (error) {
-                console.error("Erro ao carregar incidentes:", error);
-                showToast("Erro ao carregar lista de incidentes.", "danger");
+                setToast({ show: true, message: "Erro ao carregar incidentes.", variant: "danger" });
             }
         };
-
-        fetchData();
+        fetchIncidentes();
     }, []);
 
-  // Preencher dados ao editar
-  useEffect(() => {
-    if (selectedLesson) setFormData(selectedLesson);
-  }, [selectedLesson]);
+    useEffect(() => {
+        if (selectedLesson) {
+            setFormData({
+                incidenteId: selectedLesson.incidenteId || (selectedLesson.incidente && selectedLesson.incidente.id) || "",
+                descricaoResolucao: selectedLesson.descricaoResolucao || ""
+            });
+        } else {
+            setFormData({ incidenteId: "", descricaoResolucao: "" });
+        }
+    }, [selectedLesson]);
 
-  // Atualiza estado conforme o usuário digita
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
 
-  // Salvar / Atualizar lição
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            if (selectedLesson) await updateLicao(selectedLesson.id, formData);
+            else await createLicao(formData);
+            
+            setFormData({ incidenteId: "", descricaoResolucao: "" });
+            onSave();
+            setToast({ show: true, message: "Operação realizada com sucesso.", variant: "success" });
+        } catch (error) {
+            setToast({ show: true, message: "Falha na operação. Verifique se o incidente já possui lição registada (1:1).", variant: "danger" });
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    try {
-      if (selectedLesson) {
-        await updateLicao(selectedLesson.id, formData);
-        showToast("Lição atualizada com sucesso!");
-      } else {
-        await createLicao(formData);
-        showToast("Lição adicionada com sucesso!");
-      }
+    return (
+        <div className="p-3 border border-dark rounded-0 bg-light">
+            <Form onSubmit={handleSubmit}>
+                <Form.Group className="mb-3">
+                    <Form.Label>Incidente Relacionado</Form.Label>
+                    <Form.Select
+                        className="rounded-0 shadow-none border-dark"
+                        name="incidenteId"
+                        value={formData.incidenteId}
+                        onChange={handleChange}
+                        required
+                        disabled={!!selectedLesson} // Relação 1:1, a edição não deve alterar a chave estrangeira
+                    >
+                        <option value="">Selecione o Incidente...</option>
+                        {incidentes.map(inc => (
+                            <option key={inc.id} value={inc.id}>
+                                #{inc.numeroChamado || inc.id} — {inc.titulo || "Sem Título"}
+                            </option>
+                        ))}
+                    </Form.Select>
+                </Form.Group>
 
-      onSave();
-      setFormData({
-        titulo: "",
-        descricao: "",
-        autor: "",
-        id_incidente: "",
-        anexos: "",
-      });
-    } catch (error) {
-      console.error("Erro ao salvar lição:", error);
-      showToast("Erro ao salvar lição.", "danger");
-    } finally {
-      setLoading(false);
-    }
-  };
+                <Form.Group className="mb-3">
+                    <Form.Label>Descrição da Resolução (Lição Aprendida)</Form.Label>
+                    <Form.Control
+                        className="rounded-0 shadow-none border-dark"
+                        as="textarea"
+                        rows={5}
+                        name="descricaoResolucao"
+                        value={formData.descricaoResolucao}
+                        onChange={handleChange}
+                        required
+                    />
+                </Form.Group>
 
-  // Cancelar edição / limpar formulário
-  const handleCancel = () => {
-    setFormData({
-      titulo: "",
-      descricao: "",
-      autor: "",
-      id_incidente: "",
-      anexos: "",
-    });
-    onSave(); // fecha modo de edição se houver
-  };
-
-  return (
-    <div className="licao-form mb-4">
-      <h4>{selectedLesson ? "Editar Lição" : "Nova Lição"}</h4>
-
-      <Form onSubmit={handleSubmit} className="licao-form-inner">
-        <Form.Group className="mb-3">
-          <Form.Label>Título</Form.Label>
-          <Form.Control
-            name="titulo"
-            value={formData.titulo}
-            onChange={handleChange}
-            required
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Descrição</Form.Label>
-          <Form.Control
-            as="textarea"
-            name="descricao"
-            rows={3}
-            value={formData.descricao}
-            onChange={handleChange}
-            required
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Autor da Lição</Form.Label>
-          <Form.Select
-            name="autor" // ✅ Corrigido
-            value={formData.autor}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Selecione...</option>
-            {Array.isArray(usuarios) &&
-              usuarios.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.nome}
-                </option>
-              ))}
-          </Form.Select>
-        </Form.Group>
-
-        
-
-        <Form.Group className="mb-3">
-          <Form.Label>Incidente Relacionado</Form.Label>
-          <Form.Select
-            name="id_incidente" // ✅ Corrigido
-            value={formData.id_incidente}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Selecione...</option>
-            {Array.isArray(incidentes) &&
-              incidentes.map((inc) => (
-                <option key={inc.id} value={inc.id}>
-                  #{inc.numeroChamado || inc.id} — {inc.assunto || "Sem assunto"}
-                </option>
-              ))}
-          </Form.Select>
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Anexos (link de documento)</Form.Label>
-          <Form.Control
-            name="anexos"
-            value={formData.anexos}
-            onChange={handleChange}
-            placeholder="URL do documento (opcional)"
-          />
-        </Form.Group>
-
-        <div className="form-actions d-flex">
-          <Button type="submit" variant="primary" disabled={loading}>
-            {loading
-              ? "Salvando..."
-              : selectedLesson
-              ? "Atualizar"
-              : "Adicionar"}
-          </Button>
-          <Button
-            variant="secondary"
-            className="ms-2"
-            onClick={handleCancel}
-            disabled={loading}
-          >
-            Cancelar
-          </Button>
+                <div className="mt-3">
+                    <Button type="submit" variant="dark" className="rounded-0 shadow-none" disabled={loading}>
+                        {selectedLesson ? "Atualizar Registo" : "Gravar Lição"}
+                    </Button>
+                    {selectedLesson && (
+                        <Button variant="outline-dark" className="ms-2 rounded-0 shadow-none" onClick={() => { setFormData({ incidenteId: "", descricaoResolucao: "" }); onSave(); }}>
+                            Cancelar
+                        </Button>
+                    )}
+                </div>
+            </Form>
+            <ToastMessage show={toast.show} onClose={() => setToast({ ...toast, show: false })} message={toast.message} variant={toast.variant} />
         </div>
-      </Form>
-
-      <ToastMessage
-        show={toast.show}
-        onClose={hideToast}
-        message={toast.message}
-        variant={toast.variant}
-      />
-    </div>
-  );
+    );
 };
 
 export default LicaoForm;

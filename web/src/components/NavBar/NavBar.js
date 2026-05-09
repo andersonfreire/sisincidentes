@@ -65,7 +65,12 @@ const NavBar = () => {
           </Nav.Link>
 
           <Nav.Link as={Link} to="/incidentes" className="text-light sidebar-item">
-            <FaBug className="me-2" /> {isOpen && "Incidentes e Vulnerabilidades"}
+            <FaBug className="me-2" /> {isOpen && "Incidentes"}
+          </Nav.Link>
+
+          
+          <Nav.Link as={Link} to="/vulnerabilidades" className="text-light sidebar-item">
+            <FaBug className="me-2" /> {isOpen && "Vulnerabilidades"}
           </Nav.Link>
 
           <Nav.Link as={Link} to="/relatorios" className="text-light sidebar-item">

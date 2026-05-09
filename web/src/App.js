@@ -11,6 +11,7 @@ import Home from "./pages/Home/Home";
 import MainLayout from "./components/MainLayout/MainLayout";
 import Login from "./pages/Login/Login";
 import Incidente from "./pages/Incidente/Indicente";
+import Vulnerabilidade from "./pages/Vulnerabilidade/Vulnerabilidade";
 import Estatisticas from "./pages/Estatisticas/Estatisticas";
 import Licao from "./pages/Licao/Licao";
 import Relatorios from "./pages/Relatorios/Relatorios";
@@ -125,6 +126,17 @@ function App() {
               <PrivateRoute>
                 <MainLayout>
                   <Incidente />
+                </MainLayout>
+              </PrivateRoute>
+            }
+          />
+
+          <Route 
+            path="/vulnerabilidades"
+            element={
+              <PrivateRoute>
+                <MainLayout>
+                  <Vulnerabilidade />
                 </MainLayout>
               </PrivateRoute>
             }

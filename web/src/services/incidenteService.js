@@ -2,82 +2,41 @@ import { request } from "./api";
 
 const ENDPOINT = "/incidentes";
 
-// Cadastrar novo incidente
+const preparePayload = (data) => ({
+    titulo: data.titulo || "Sem título",
+    descricao: data.descricao || "Sem descrição",
+    status: data.status || "ABERTO",
+    numeroChamado: data.numeroChamado || null,
+    tarefaRelacionada: data.tarefaRelacionada || null,
+    tipo: data.tipo || null,
+    prioridade: data.prioridade || null,
+    ipOrigem: data.ipOrigem || null,
+    ipDestino: data.ipDestino || null,
+    host: data.host || null,
+    tempoEstimado: data.tempoEstimado || null,
+    cc: data.cc || null,
+    notas: data.notas || null,
+    categoriaId: data.categoriaId ? Number(data.categoriaId) : null,
+    unidadeId: data.unidadeId ? Number(data.unidadeId) : null,
+    autorId: data.autorId ? Number(data.autorId) : null,
+    atribuidoId: data.atribuidoId ? Number(data.atribuidoId) : null,
+    vulnerabilidadesIds: data.vulnerabilidadesIds ? data.vulnerabilidadesIds.map(Number) : []
+});
+
 export const createIncidente = async (data) => {
-    // Mapeamento para o DTO do Backend (IncidenteRequestDTO)
-    const payload = {
-        titulo: data.assunto || data.titulo || "Sem título",
-        descricao: data.descricao || "Sem descrição",
-        status: data.situacao || data.status || "ABERTO",
-        numeroChamado: data.numeroChamado,
-        tarefaRelacionada: data.tarefaRelacionada,
-        tipo: data.tipo,
-        prioridade: data.prioridade,
-        ipOrigem: data.ipOrigem,
-        ipDestino: data.ipDestino,
-        host: data.host,
-        tempoEstimado: data.tempoEstimado,
-        cc: data.cc,
-        notas: data.notas,
-        categoriaId: data.categoriaId,
-        unidadeId: data.unidadeId,
-        autorId: data.autorId,
-        atribuidoId: data.atribuidoId,
-        vulnerabilidadesIds: data.vulnerabilidadesIds || []
-    };
-
-    const result = await request(ENDPOINT, {
+    return request(ENDPOINT, {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(preparePayload(data)),
     });
-    return { ...result, success: true, message: "Incidente registrado com sucesso!" };
 };
 
-// Atualizar incidente existente
-export const updateIncidente = async (id, updates) => {
-    // Mapeamento para o DTO do Backend (IncidenteRequestDTO)
-    const payload = {
-        titulo: updates.assunto || updates.titulo,
-        descricao: updates.descricao,
-        status: updates.situacao || updates.status,
-        numeroChamado: updates.numeroChamado,
-        tarefaRelacionada: updates.tarefaRelacionada,
-        tipo: updates.tipo,
-        prioridade: updates.prioridade,
-        ipOrigem: updates.ipOrigem,
-        ipDestino: updates.ipDestino,
-        host: updates.host,
-        tempoEstimado: updates.tempoEstimado,
-        cc: updates.cc,
-        notas: updates.notas,
-        categoriaId: updates.categoriaId,
-        unidadeId: updates.unidadeId,
-        autorId: updates.autorId,
-        atribuidoId: updates.atribuidoId,
-        vulnerabilidadesIds: updates.vulnerabilidadesIds || []
-    };
-
-    const result = await request(`${ENDPOINT}/${id}`, {
+export const updateIncidente = async (id, data) => {
+    return request(`${ENDPOINT}/${id}`, {
         method: "PUT",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(preparePayload(data)),
     });
-    return { ...result, success: true, message: "Incidente atualizado com sucesso!" };
 };
 
-// Listar todos os incidentes
-export const getIncidentes = async () => {
-    return request(ENDPOINT);
-};
-
-// Buscar incidente por ID
-export const getIncidenteById = async (id) => {
-    return request(`${ENDPOINT}/${id}`);
-};
-
-// Excluir incidente
-export const deleteIncidente = async (id) => {
-    await request(`${ENDPOINT}/${id}`, {
-        method: "DELETE",
-    });
-    return { success: true, message: "Incidente excluído com sucesso!" };
-};
+export const getIncidentes = () => request(ENDPOINT);
+export const getIncidenteById = (id) => request(`${ENDPOINT}/${id}`);
+export const deleteIncidente = (id) => request(`${ENDPOINT}/${id}`, { method: "DELETE" });

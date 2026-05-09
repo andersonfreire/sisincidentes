@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SisincidentesApplication<sisincidentes>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.seguranca.sisincidentes.SisincidentesApplication",
+            "projectName": "sisincidentes",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

@@ -1,46 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Button, Accordion, Spinner } from "react-bootstrap";
+import { Button, Accordion, Spinner, Badge } from "react-bootstrap";
 import { deleteIncidente, getIncidentes } from "../../services/incidenteService";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
-import { getCategoryById } from "../../services/categoriaService";
-import { getUnidadeById } from "../../services/unidadeAdministrativaService";
-import { getUsuarioById } from "../../services/usuarioService";
 
-const IncidenteList = ({ onEdit }) => {
+const IncidentList = ({ onEdit }) => {
     const [incidentes, setIncidentes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [incidenteSelecionado, setIncidenteSelecionado] = useState(null);
 
-    // Busca todos os incidentes e enriquece com dados relacionados
     const fetchIncidentes = async () => {
         setLoading(true);
         try {
             const data = await getIncidentes();
-
-            // Enriquecer incidentes com dados de categoria, unidade e usuários
-            const incidentesComDetalhes = await Promise.all(
-                data.map(async (incidente) => {
-                    const [categoria, unidade, autor, atribuido] = await Promise.all([
-                        incidente.categoriaId ? getCategoryById(incidente.categoriaId) : null,
-                        incidente.unidadeId ? getUnidadeById(incidente.unidadeId) : null,
-                        incidente.autorId ? getUsuarioById(incidente.autorId) : null,
-                        incidente.atribuidoId ? getUsuarioById(incidente.atribuidoId) : null,
-                    ]);
-
-                    return {
-                        ...incidente,
-                        categoriaNome: categoria?.nome || "—",
-                        unidadeNome: unidade?.titulo || "—",
-                        autorNome: autor?.nome || "—",
-                        atribuidoNome: atribuido?.nome || "—",
-                    };
-                })
-            );
-
-            setIncidentes(incidentesComDetalhes);
+            setIncidentes(data || []);
         } catch (error) {
-            console.error("Erro ao buscar incidentes:", error);
+            console.error("Erro ao carregar incidentes", error);
         } finally {
             setLoading(false);
         }
@@ -56,13 +31,11 @@ const IncidenteList = ({ onEdit }) => {
     };
 
     const handleConfirmDelete = async () => {
-        try {
+        if (incidenteSelecionado) {
             await deleteIncidente(incidenteSelecionado.id);
             setShowModal(false);
             setIncidenteSelecionado(null);
             fetchIncidentes();
-        } catch (error) {
-            console.error("Erro ao excluir incidente:", error);
         }
     };
 
@@ -71,89 +44,54 @@ const IncidenteList = ({ onEdit }) => {
         setIncidenteSelecionado(null);
     };
 
-    if (loading) {
-        return (
-            <div className="text-center my-5">
-                <Spinner animation="border" role="status" />
-                <div>Carregando incidentes...</div>
-            </div>
-        );
-    }
+    const formatarData = (dataString) => {
+        if (!dataString) return "—";
+        return new Date(dataString).toLocaleString("pt-PT");
+    };
 
     return (
-        <div className="py-3">
-            <h5 className="mb-3">Registros</h5>
-
-            {incidentes.length === 0 ? (
-                <p className="text-center text-muted">Nenhum incidente registrado.</p>
+        <div>
+            {loading ? (
+                <div className="text-center p-4">
+                    <Spinner animation="border" variant="dark" />
+                </div>
             ) : (
-                <Accordion defaultActiveKey={null}>
-                    {incidentes.map((incidente, index) => (
-                        <Accordion.Item eventKey={index.toString()} key={incidente.id}>
-                            <Accordion.Header>
-                                <div className="d-flex flex-column flex-md-row w-100 justify-content-between">
-                                    <div>
-                                        <strong>#{incidente.numeroChamado || "—"} </strong>
-                                        — {incidente.assunto || "(sem assunto)"}
-                                    </div>
-                                    <div className="text-muted small">
-                                        {incidente.situacao} • {incidente.prioridade}
-                                    </div>
-                                </div>
+                <Accordion className="border-0 gap-2 d-flex flex-column">
+                    {incidentes.map((incidente) => (
+                        <Accordion.Item 
+                            key={incidente.id} 
+                            eventKey={incidente.id.toString()} 
+                            className="border border-dark rounded-0 shadow-none bg-light"
+                        >
+                            <Accordion.Header className="shadow-none">
+                                <strong>#{incidente.numeroChamado || incidente.id}</strong> — {incidente.titulo} 
+                                <Badge bg="dark" className="ms-3 rounded-0 shadow-none">
+                                    {incidente.status}
+                                </Badge>
                             </Accordion.Header>
-
-                            <Accordion.Body>
-                                <div className="p-2">
-                                    <p><strong>Tipo:</strong> {incidente.tipo || "—"}</p>
-                                    <p><strong>Categoria:</strong> {incidente.categoriaNome}</p>
-                                    <p><strong>Unidade Administrativa:</strong> {incidente.unidadeNome}</p>
-                                    <p><strong>Autor:</strong> {incidente.autorNome}</p>
-                                    <p><strong>Atribuído para:</strong> {incidente.atribuidoNome}</p>
-
-                                    <hr />
-
-                                    <p><strong>IP de Origem:</strong> {incidente.ipOrigem || "—"}</p>
-                                    <p><strong>IP de Destino:</strong> {incidente.ipDestino || "—"}</p>
-                                    <p><strong>Host:</strong> {incidente.host || "—"}</p>
-
-                                    <hr />
-
-                                    <p><strong>Descrição:</strong></p>
-                                    <p className="text-muted">{incidente.descricao || "—"}</p>
-
-                                        {incidente.notas && (
-                                            <>
-                                            <hr />
-                                            <p><strong>Notas:</strong></p>
-                                            <p className="text-muted">{incidente.notas}</p>
-                                            </>
-                                        )}
-
-                                    <hr />
-
-                                    <p><strong>Data Criação:</strong> {formatarData(incidente.createdAt)}</p>
-                                    <p><strong>Última Alteração:</strong> {formatarData(incidente.updatedAt)}</p>
-                                    {incidente.dataConclusao && (
-                                        <p><strong>Conclusão:</strong> {formatarData(incidente.dataConclusao)}</p>
-                                    )}
-
-                                    <div className="mt-3 d-flex justify-content-end">
-                                        <Button
-                                            variant="warning"
-                                            size="sm"
-                                            className="me-2"
-                                            onClick={() => onEdit(incidente)}
-                                        >
-                                            Editar
-                                        </Button>
-                                        <Button
-                                            variant="danger"
-                                            size="sm"
-                                            onClick={() => handleDeleteClick(incidente)}
-                                        >
-                                            Excluir
-                                        </Button>
-                                    </div>
+                            <Accordion.Body className="bg-white border-top border-dark rounded-0">
+                                <p><strong>Descrição:</strong> {incidente.descricao}</p>
+                                <p><strong>Data de Registo:</strong> {formatarData(incidente.dataRegistro)}</p>
+                                <p><strong>Tipo:</strong> {incidente.tipo || "—"}</p>
+                                <p><strong>Prioridade:</strong> {incidente.prioridade || "—"}</p>
+                                
+                                <div className="d-flex justify-content-end mt-3">
+                                    <Button 
+                                        variant="outline-dark" 
+                                        size="sm" 
+                                        className="rounded-0 shadow-none me-2" 
+                                        onClick={() => onEdit(incidente)}
+                                    >
+                                        Editar
+                                    </Button>
+                                    <Button 
+                                        variant="dark" 
+                                        size="sm" 
+                                        className="rounded-0 shadow-none" 
+                                        onClick={() => handleDeleteClick(incidente)}
+                                    >
+                                        Eliminar
+                                    </Button>
                                 </div>
                             </Accordion.Body>
                         </Accordion.Item>
@@ -161,7 +99,6 @@ const IncidenteList = ({ onEdit }) => {
                 </Accordion>
             )}
 
-            {/* Modal de confirmação */}
             <ConfirmModal
                 show={showModal}
                 onHide={handleCancelDelete}
@@ -169,22 +106,12 @@ const IncidenteList = ({ onEdit }) => {
                 title="Confirmar exclusão"
                 message={
                     incidenteSelecionado
-                        ? `Deseja realmente excluir o incidente #${incidenteSelecionado.numeroChamado || "—"}?`
-                        : "Deseja realmente excluir este incidente?"
+                        ? `Confirma a exclusão do registo #${incidenteSelecionado.numeroChamado || incidenteSelecionado.id}?`
+                        : ""
                 }
             />
         </div>
     );
 };
 
-// Função para formatar data de forma segura
-const formatarData = (timestamp) => {
-    if (!timestamp) return "—";
-    const date =
-        timestamp.toDate?.() instanceof Date
-        ? timestamp.toDate()
-        : new Date(timestamp);
-    return date.toLocaleString("pt-BR");
-};
-
-export default IncidenteList;
+export default IncidentList;
